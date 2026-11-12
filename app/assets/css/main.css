@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/* 显式扫描 app 目录，避免 dev 下新增页面未被 Tailwind 收录 */
+@source "../../";
+
 @theme static {
   --font-sans: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }

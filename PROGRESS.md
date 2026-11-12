@@ -23,6 +23,7 @@
 | P4 款管理 | 待开始 | 列表/新建/详情 + 数据范围过滤 | `server/services/style.ts`、`app/pages/styles/*` | — | 依赖 P1/P3 |
 | P5 流程实例化 | 待开始 | 4 套模板阶段数 9/9/7/6 | `shared/flow-templates.ts`、`server/services/flow.ts` | — | 依赖 P4 |
 | P6 任务闭环 | 待开始 | 提交/评审/驳回/转派 + 阶段推进 | `server/services/flow.ts`、任务组件 | — | 核心功能 |
+| 登录页 UI（预览） | 已完成 | `/login` 可访问；表单校验、演示账号弹窗选择/填充、提交提示正常；右上角可切换 5 种主题色与浅色/深色/系统 | `app/pages/login.vue`、`app/components/ThemeSwitcher.vue`、`app/layouts/auth.vue`、`app/app.vue`、`app/app.config.ts`、`app/assets/css/main.css` | `pnpm lint`、`pnpm typecheck` 通过；`GET /login` 返回 200；1440px 与 390px 截图正常；CDP 验证主题切换、暗色、弹窗选择、校验、填充 | 仅界面，未接登录接口与鉴权；主题色存 localStorage，刷新可能有一帧默认色 |
 
 ## 待处理事项
 
@@ -50,3 +51,7 @@
 - 建立 `AGENTS.md` 协作约定与 `PROGRESS.md` 进度看板
 - 完成 MySQL 8 + Prisma 7 连接层与 `/api/health`
 - 确认角色、菜单权限、数据权限规则（已写入主文档 2.3–2.8）
+- 新增登录页 UI 预览：`/login`，含表单校验、演示账号填充、提交提示；未接登录接口
+- `main.css` 增加 `@source "../../"`，确保 dev 下新增页面被 Tailwind 扫描
+- 登录页改版：简洁双栏布局 + 右上角主题面板（5 种主题色、浅色/深色/系统）；补 `<NuxtLayout>` 修复布局警告
+- 登录页按标注调整：移除左侧指标块，演示账号改为弹窗选择
