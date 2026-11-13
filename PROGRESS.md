@@ -5,10 +5,10 @@
 
 ## 当前阶段
 
-**P1 业务数据模型（进行中）**
+**P1 业务数据模型（进行中） / P2 登录与会话（进行中）**
 
-- 已完成：P0 环境与脚手架、MySQL 8 + Prisma 7 连接层、`User` 表、RBAC 数据模型、15 角色 + 3 演示账号 seed
-- 下一步：登录接口与会话，或确认下一张业务表
+- 已完成：P0 环境与脚手架、MySQL 8 + Prisma 7 连接层、`User` 表、RBAC 数据模型、15 角色 + 3 演示账号 seed、登录 API
+- 下一步：登录页接入与全局守卫；继续核心业务表
 
 ## 功能进度
 
@@ -20,7 +20,8 @@
 | User 表 | 已完成 | `User` 模型可迁移，Prisma Client 可生成 | `prisma/schema.prisma`、`prisma/migrations/20261112160310_add_user/migration.sql` | `prisma validate` 通过；`prisma migrate status` 显示已同步；`prisma generate` 成功 | 已移除 `roleCode`；`deptId` 暂为字符串，Department 表待补 |
 | RBAC 数据模型与种子 | 已完成 | `Role`/`UserRole`/`User.deptId` 可迁移；15 角色、3 演示账号可重复 seed | `prisma/schema.prisma`、`prisma/migrations/20261112162003_*`、`shared/permissions.ts`、`prisma/seed.ts`、`package.json` | `prisma migrate status` 已同步；Role=15、User=3、UserRole=3；`db:seed` 可重复执行；`lint`/`typecheck` 通过 | 种子为 upsert，不删除手工数据；其余 12 个演示账号待补 |
 | P1 业务数据模型 | 进行中 | 核心表可迁移，空库可重放 | `prisma/schema.prisma` | User/RBAC 迁移正常 | 其余业务表待开始 |
-| P2 登录与会话 | 待开始 | 登录/退出/刷新保持，未登录跳转 | `server/api/auth/*`、`app/pages/login.vue` | — | 依赖 P1 用户表 |
+| P2 登录与会话 | 进行中 | 登录/退出/刷新保持，未登录跳转 | `server/api/auth/*`、`app/pages/login.vue` | login/me/logout API 已验证；前端尚未接入 | 依赖 P1 用户表 |
+| 登录 API（login/me/logout） | 已完成 | 正确密码返回用户 + Cookie；错误密码 401；`me` 返回当前用户；`logout` 清除 Cookie | `server/api/auth/*`、`server/utils/auth.ts`、`shared/types/auth.ts` | 登录 200、角色/权限/范围正确；错误密码 401；`me` 200；退出后 401；无 Cookie 401；`lint`/`typecheck` 通过 | JWT 只放 `userId`；Cookie `httpOnly + sameSite=lax`；前端未接 |
 | P3 权限与数据范围 | 待开始 | 15 角色、菜单/按钮/接口、SELF/DEPT/ALL | `shared/permissions.ts`、`app/utils/menu.ts`、`server/utils/auth.ts` | — | 规则见主文档 2.3–2.8 |
 | P4 款管理 | 待开始 | 列表/新建/详情 + 数据范围过滤 | `server/services/style.ts`、`app/pages/styles/*` | — | 依赖 P1/P3 |
 | P5 流程实例化 | 待开始 | 4 套模板阶段数 9/9/7/6 | `shared/flow-templates.ts`、`server/services/flow.ts` | — | 依赖 P4 |
@@ -32,6 +33,8 @@
 | 事项 | 优先级 | 说明 |
 |---|---|---|
 | `.env` 切回 `erp` 账号 | 高 | 当前 `.env` 使用 root/9527；应改为最小权限的 `erp`，root 只用于初始化 |
+| 登录页接入 API | 高 | 登录页仍是预览，需要调用 login/me/logout 并加全局守卫 |
+| 认证接口迁移为 RESTful | 低 | 当前 `/api/auth/login|logout` 为临时例外，后续迁移到 `/api/auth/sessions` |
 | 确认下一张核心表 | 高 | User/RBAC 已完成，Customer / Style / FlowTemplate 等下一张表待拍板 |
 | 补齐其余演示账号 | 低 | 当前 seed 3 个账号，15 个角色已齐 |
 | 补 `PROGRESS.md` 与文档的一致性检查 | 低 | 每个里程碑检查一次 |
@@ -47,6 +50,8 @@
 | 2026-11-12 | Tailwind 4 通过 Nuxt UI 集成，不额外装 `@tailwindcss/vite` | 避免重复处理，官方推荐方式 |
 | 2026-11-13 | `User` 表先只建 8 个字段，`roleCode` 用字符串 | 先跑通登录；Role/UserRole 等 P3 再加，避免过早关联（已被 2026-11-13 的 RBAC 决策取代） |
 | 2026-11-13 | 采用 `Role` + `UserRole` + `User.deptId`，移除 `User.roleCode` | 支持兼岗多角色和 DEPT 数据范围；表为空，改造成本最低 |
+| 2026-11-13 | JWT 只放 `userId`，角色/权限每次查库 | 角色变更即时生效，避免 token 过期前权限陈旧 |
+| 2026-11-13 | 新接口遵循 RESTful：资源用复数名词，动作走子资源 | 统一 URL 和状态码，降低接口风格分叉；认证接口暂留例外 |
 
 ## 变更记录
 
@@ -60,6 +65,10 @@
 - 新增依赖 `bcryptjs`、`tsx`，并增加 `db:seed` 脚本
 - 新增 `prisma/tsconfig.json` 与 `@types/node`，修复 seed 脚本中 `process` 的编辑器类型报错
 - 为 `Role`、`UserRole` 的字段和关系补充中文备注
+- 实现登录 API：`POST /api/auth/login`、`GET /api/auth/me`、`POST /api/auth/logout`
+- 新增 `server/utils/auth.ts` 与 `shared/types/auth.ts`；新增依赖 `jose`、`zod`
+- 本地 `.env` 增加 `JWT_SECRET`（未提交）；登录 API 已用 3 个演示账号验证
+- 在 `AGENTS.md` 增加第 12 节 RESTful API 设计规范；认证接口记录为临时例外
 
 ### 2026-11-12
 

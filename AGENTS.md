@@ -246,3 +246,111 @@
 - 数据库连接：`server/utils/db.ts`（adapter）+ `server/utils/prisma.ts`（单例）
 - API 错误：直接 `throw createError(...)`，不额外包 `{ code, data }`
 - 注释与 UI 文案：中文；标识符：英文
+
+---
+
+## 12. API 设计规范（RESTful）
+
+> 适用于 `server/api/**`。新增接口必须遵守；修改已有接口时逐步对齐，不为了规范单独大改无关代码。
+
+### 12.1 URL 与资源
+
+- 统一前缀 `/api`
+- 资源名用**复数名词**、小写，多单词用 kebab-case
+- URL 只出现资源，不出现动词
+- 资源 ID 放路径；嵌套资源最多两层
+- 复杂查询用 query 参数，不继续加深路径
+
+| 操作 | 示例 |
+|---|---|
+| 列表 | `GET /api/styles` |
+| 详情 | `GET /api/styles/:id` |
+| 新建 | `POST /api/styles` |
+| 部分更新 | `PATCH /api/styles/:id` |
+| 删除 | `DELETE /api/styles/:id` |
+| 子资源 | `GET /api/styles/:id/tasks` |
+
+禁止：`GET /api/getStyles`、`POST /api/styles/create`、`POST /api/tasks/:id/submit`。
+
+### 12.2 HTTP 方法与状态码
+
+| 方法 | 语义 | 成功状态 |
+|---|---|---|
+| GET | 查询 | 200 |
+| POST | 新建 / 动作 | 201（新建）/ 200（动作） |
+| PATCH | 部分更新 | 200 |
+| PUT | 全量替换 | 200 / 204 |
+| DELETE | 删除 | 204 |
+
+| 状态码 | 使用场景 |
+|---|---|
+| 400 | 参数格式或校验失败 |
+| 401 | 未登录、登录过期 |
+| 403 | 已登录但无功能权限 |
+| 404 | 资源不存在，或数据范围外不可见 |
+| 409 | 状态冲突、重复提交、唯一键冲突 |
+| 500 | 服务端异常；不返回堆栈或 SQL |
+
+### 12.3 请求与响应
+
+- 请求/响应统一 JSON，`Content-Type: application/json`
+- 成功直接返回 DTO，不包 `{ code, data }`
+- 列表统一返回 `{ items, total, page, pageSize }`
+- 错误统一 `throw createError({ statusCode, statusMessage })`；字段级错误可放在 `data.fields`
+- 时间用 ISO 8601 字符串；`Decimal` 在 API 边界转字符串
+- JSON 字段用 camelCase；枚举值用 `UPPER_SNAKE_CASE`
+- 响应中禁止出现 `password`、token、连接串、堆栈
+
+### 12.4 分页、筛选、排序
+
+- 列表必须分页：`page` 从 1 开始，`pageSize` 默认 20、最大 100
+- 筛选参数直接用字段名：`keyword`、`status`、`sourceLine`、`designerId`
+- 排序：`sortBy` + `sortOrder=asc|desc`，`sortBy` 必须白名单校验
+- 日期范围：`createdFrom` / `createdTo`，ISO 日期
+
+```json
+{
+  "items": [],
+  "total": 0,
+  "page": 1,
+  "pageSize": 20
+}
+```
+
+### 12.5 业务动作
+
+CRUD 之外的动作优先建模为子资源，不把动词写进 URL：
+
+- 任务动作：`POST /api/tasks/:id/actions`，body `{ "action": "submit" | "approve" | "reject" | "assign", ... }`
+- 订单变更：`POST /api/styles/:id/changes`
+- 款状态：`PATCH /api/styles/:id/status`，body `{ "status": "SUSPENDED" }`
+
+约束：
+
+- 动作接口必须校验当前状态，重复操作返回 409
+- 一次动作只做一个业务结果，不把多个不相关动作塞进一个接口
+- 详细版第 8 节中 `/tasks/:id/submit` 等早期示例，按本节改为 `actions` 子资源
+
+### 12.6 权限与数据范围
+
+- 受保护接口必须 `requireUser()`；需要权限码的再加 `requirePermission()`
+- 列表过滤 + 详情/修改二次校验，不能只靠列表
+- 无功能权限返回 403；数据范围外统一返回 404，避免泄露资源是否存在
+- 不信任前端传来的角色、用户 ID、数据范围
+
+### 12.7 认证接口
+
+- 会话用 httpOnly Cookie，不在响应体返回 token
+- 新接口按资源化设计：
+  - `POST /api/auth/sessions`：登录
+  - `DELETE /api/auth/sessions/current`：退出
+  - `GET /api/users/me`：当前用户
+- 现有 `POST /api/auth/login`、`POST /api/auth/logout`、`GET /api/auth/me` 为已实现接口，属于临时例外；修改认证模块时迁移到上面的资源路径，不新增同类动词路径
+- `GET /api/health` 为运维探针，不受资源命名约束
+
+### 12.8 分层要求
+
+- `server/api` 只做：zod 校验 → 鉴权 → 调 service → 返回 DTO
+- 业务规则、状态流转、事务放 `server/services`
+- 数据访问只出现在 `server/services` 或 `server/utils`
+- 不在 API 路由里直接写复杂 Prisma 查询
