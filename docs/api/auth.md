@@ -5,6 +5,8 @@
 
 当前用户接口在 [users.md](./users.md)。
 
+> 所有响应统一为 `{ code, data, message }`，详见 [conventions.md](./conventions.md)。
+
 ---
 
 ## 1. 登录
@@ -35,19 +37,23 @@ POST /api/auth/sessions
 
 ```json
 {
-  "id": "cm9x0v7q10000abc123def456",
-  "email": "admin@erp.local",
-  "name": "系统管理员",
-  "deptId": "MANAGEMENT",
-  "roles": [
-    {
-      "code": "ADMIN",
-      "name": "总经理/管理员",
-      "dataScope": "ALL"
-    }
-  ],
-  "permissions": ["*"],
-  "dataScope": "ALL"
+  "code": 201,
+  "data": {
+    "id": "cm9x0v7q10000abc123def456",
+    "email": "admin@erp.local",
+    "name": "系统管理员",
+    "deptId": "MANAGEMENT",
+    "roles": [
+      {
+        "code": "ADMIN",
+        "name": "总经理/管理员",
+        "dataScope": "ALL"
+      }
+    ],
+    "permissions": ["*"],
+    "dataScope": "ALL"
+  },
+  "message": "ok"
 }
 ```
 
@@ -55,7 +61,9 @@ POST /api/auth/sessions
 
 **错误响应**
 
-| 状态码 | 场景 | statusMessage 示例 |
+错误体统一为 `{ code, data: null, message }`。
+
+| 状态码 | 场景 | message 示例 |
 |---|---|---|
 | 400 | 邮箱为空 | `请输入邮箱` |
 | 400 | 邮箱格式错误 | `邮箱格式不正确` |
@@ -83,7 +91,7 @@ curl -i -c cookies.txt -X POST http://localhost:3000/api/auth/sessions -H "Conte
 
 ## 2. 退出登录
 
-删除当前会话 Cookie。接口幂等，无 Cookie 时也返回 204。
+删除当前会话 Cookie。接口幂等，无 Cookie 时也返回 200。
 
 ```http
 DELETE /api/auth/sessions/current
@@ -91,9 +99,15 @@ DELETE /api/auth/sessions/current
 
 **权限**：无需登录
 
-**成功响应：204 No Content**
+**成功响应：200 OK**
 
-无响应体。
+```json
+{
+  "code": 200,
+  "data": null,
+  "message": "ok"
+}
+```
 
 **PowerShell 示例**
 

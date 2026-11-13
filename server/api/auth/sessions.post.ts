@@ -2,13 +2,14 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { setAuthCookie, signToken, toAuthUser } from '../../utils/auth'
 import { prisma } from '../../utils/prisma'
+import { defineApiHandler } from '../../utils/response'
 
 const loginSchema = z.object({
   email: z.string().trim().min(1, '请输入邮箱').email('邮箱格式不正确'),
   password: z.string().min(6, '密码至少 6 位')
 })
 
-export default defineEventHandler(async (event) => {
+export default defineApiHandler(async (event) => {
   const body: unknown = await readBody(event)
   const parsed = loginSchema.safeParse(body)
   if (!parsed.success) {

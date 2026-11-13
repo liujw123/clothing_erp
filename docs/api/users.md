@@ -26,25 +26,31 @@ Cookie: erp_token=<JWT>
 
 ```json
 {
-  "id": "cm9x0v7q10000abc123def456",
-  "email": "admin@erp.local",
-  "name": "系统管理员",
-  "deptId": "MANAGEMENT",
-  "roles": [
-    {
-      "code": "ADMIN",
-      "name": "总经理/管理员",
-      "dataScope": "ALL"
-    }
-  ],
-  "permissions": ["*"],
-  "dataScope": "ALL"
+  "code": 200,
+  "data": {
+    "id": "cm9x0v7q10000abc123def456",
+    "email": "admin@erp.local",
+    "name": "系统管理员",
+    "deptId": "MANAGEMENT",
+    "roles": [
+      {
+        "code": "ADMIN",
+        "name": "总经理/管理员",
+        "dataScope": "ALL"
+      }
+    ],
+    "permissions": ["*"],
+    "dataScope": "ALL"
+  },
+  "message": "ok"
 }
 ```
 
 **错误响应**
 
-| 状态码 | 场景 | statusMessage 示例 |
+错误体统一为 `{ code, data: null, message }`。
+
+| 状态码 | 场景 | message 示例 |
 |---|---|---|
 | 401 | 未携带 Cookie | `未登录` |
 | 401 | Token 无效或过期 | `登录已过期，请重新登录` |

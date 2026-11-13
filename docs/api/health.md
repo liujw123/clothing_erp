@@ -16,17 +16,23 @@ GET /api/health
 
 ```json
 {
-  "ok": true,
-  "database": "mysql",
-  "latencyMs": 2
+  "code": 200,
+  "data": {
+    "ok": true,
+    "database": "mysql",
+    "latencyMs": 2
+  },
+  "message": "ok"
 }
 ```
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
-| `ok` | boolean | 数据库连接是否正常 |
-| `database` | string | 数据库类型 |
-| `latencyMs` | number | 本次检查耗时，毫秒 |
+| `code` | number | 与 HTTP 状态码一致 |
+| `data.ok` | boolean | 数据库连接是否正常 |
+| `data.database` | string | 数据库类型 |
+| `data.latencyMs` | number | 本次检查耗时，毫秒 |
+| `message` | string | 成功固定为 `ok` |
 
 **PowerShell 示例**
 

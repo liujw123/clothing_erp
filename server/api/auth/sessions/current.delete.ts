@@ -1,6 +1,7 @@
 import { clearAuthCookie } from '../../../utils/auth'
+import { defineApiHandler } from '../../../utils/response'
 
-export default defineEventHandler((event) => {
+export default defineApiHandler((event) => {
   clearAuthCookie(event)
-  setResponseStatus(event, 204)
+  return null
 })

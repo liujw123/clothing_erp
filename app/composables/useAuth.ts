@@ -1,3 +1,4 @@
+import type { ApiResponse } from '#shared/types/api'
 import type { AuthUser } from '#shared/types/auth'
 
 /**
@@ -10,7 +11,8 @@ export function useAuth() {
   async function fetchMe() {
     const requestFetch = useRequestFetch()
     try {
-      user.value = await requestFetch<AuthUser>('/api/users/me')
+      const response = await requestFetch<ApiResponse<AuthUser>>('/api/users/me')
+      user.value = response.data
     } catch {
       user.value = null
     }
@@ -18,17 +20,17 @@ export function useAuth() {
   }
 
   async function login(email: string, password: string) {
-    const authUser = await $fetch<AuthUser>('/api/auth/sessions', {
+    const response = await $fetch<ApiResponse<AuthUser>>('/api/auth/sessions', {
       method: 'POST',
       body: { email, password }
     })
-    user.value = authUser
-    return authUser
+    user.value = response.data
+    return response.data
   }
 
   async function logout() {
     try {
-      await $fetch('/api/auth/sessions/current', { method: 'DELETE' })
+      await $fetch<ApiResponse<null>>('/api/auth/sessions/current', { method: 'DELETE' })
     } finally {
       user.value = null
       await navigateTo('/login')

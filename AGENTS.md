@@ -245,7 +245,7 @@
 - 健康检查：`GET /api/health`
 - Prisma 7：`prisma-client` 生成器，输出到 `server/generated/prisma`（已 gitignore）
 - 数据库连接：`server/utils/db.ts`（adapter）+ `server/utils/prisma.ts`（单例）
-- API 错误：直接 `throw createError(...)`，不额外包 `{ code, data }`
+- API 响应：统一 `{ code, data, message }`，由 `defineApiHandler` 包装；业务代码仍直接 `throw createError(...)`
 - 注释与 UI 文案：中文；标识符：英文
 
 ---
@@ -280,8 +280,10 @@
 | GET | 查询 | 200 |
 | POST | 新建 / 动作 | 201（新建）/ 200（动作） |
 | PATCH | 部分更新 | 200 |
-| PUT | 全量替换 | 200 / 204 |
-| DELETE | 删除 | 204 |
+| PUT | 全量替换 | 200 |
+| DELETE | 删除 | 200 |
+
+> 不使用 204：统一响应需要响应体，删除/退出返回 200 + `data: null`。
 
 | 状态码 | 使用场景 |
 |---|---|
@@ -295,9 +297,13 @@
 ### 12.3 请求与响应
 
 - 请求/响应统一 JSON，`Content-Type: application/json`
-- 成功直接返回 DTO，不包 `{ code, data }`
-- 列表统一返回 `{ items, total, page, pageSize }`
-- 错误统一 `throw createError({ statusCode, statusMessage })`；字段级错误可放在 `data.fields`
+- 所有响应统一返回 `{ code, data, message }`
+- 成功：`code` 与 HTTP 状态码一致（200/201），`data` 为 DTO，`message` 为 `ok`
+- 失败：`data: null`，`message` 为可展示错误信息，`code` 为 4xx/5xx
+- 路由统一用 `defineApiHandler` 包装；业务代码继续 `throw createError(...)`
+- 列表的 `data` 统一为 `{ items, total, page, pageSize }`
+- 不使用 204（删除/退出返回 200 + `data: null`）
+- 错误响应不返回堆栈、SQL、连接串
 - 时间用 ISO 8601 字符串；`Decimal` 在 API 边界转字符串
 - JSON 字段用 camelCase；枚举值用 `UPPER_SNAKE_CASE`
 - 响应中禁止出现 `password`、token、连接串、堆栈
@@ -344,13 +350,14 @@ CRUD 之外的动作优先建模为子资源，不把动词写进 URL：
 - 会话用 httpOnly Cookie，不在响应体返回 token
 - 认证会话按资源化设计：
   - `POST /api/auth/sessions`：登录，成功返回 201
-  - `DELETE /api/auth/sessions/current`：退出，成功返回 204
+  - `DELETE /api/auth/sessions/current`：退出，成功返回 200 + `data: null`
   - `GET /api/users/me`：当前用户，成功返回 200
 - `GET /api/health` 为运维探针，不受资源命名约束
 
 ### 12.8 分层要求
 
 - `server/api` 只做：zod 校验 → 鉴权 → 调 service → 返回 DTO
+- 路由统一用 `defineApiHandler` 包装为 `{ code, data, message }`
 - 业务规则、状态流转、事务放 `server/services`
 - 数据访问只出现在 `server/services` 或 `server/utils`
 - 不在 API 路由里直接写复杂 Prisma 查询

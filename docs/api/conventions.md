@@ -8,13 +8,24 @@
 
 - 请求和响应统一使用 JSON，字符集 UTF-8
 - 请求头：`Content-Type: application/json`
-- 成功响应直接返回 DTO，不包 `{ code, data }`
-- 错误响应至少包含 `statusCode` 和 `statusMessage`
+- 所有响应统一返回 `{ code, data, message }`
+- 成功：`code` 与 HTTP 状态码一致（200/201），`data` 为 DTO，`message` 为 `ok`
+- 失败：`data: null`，`message` 为可展示错误信息，`code` 为 4xx/5xx
 - 时间字段使用 ISO 8601 字符串
 - `Decimal` 金额在 API 边界转成字符串
 - JSON 字段使用 camelCase，枚举值使用 `UPPER_SNAKE_CASE`
 
-> 开发环境下 Nuxt 可能额外返回 `stack` 等调试字段；客户端只需依赖 `statusCode` 和 `statusMessage`。
+成功示例：
+
+```json
+{
+  "code": 200,
+  "data": {},
+  "message": "ok"
+}
+```
+
+> 开发环境不会再额外返回 `stack` 等调试字段；统一由 `defineApiHandler` 包装。
 
 ---
 
@@ -22,15 +33,16 @@
 
 | 状态码 | 含义 |
 |---|---|
-| 200 | 查询成功、更新成功 |
+| 200 | 查询、更新、删除成功 |
 | 201 | 创建成功（登录创建会话） |
-| 204 | 删除成功，无响应体 |
 | 400 | 参数格式或校验失败 |
 | 401 | 未登录、登录过期、账号密码错误 |
 | 403 | 已登录但无功能权限 |
 | 404 | 资源不存在，或数据范围外不可见 |
 | 409 | 状态冲突、重复提交、唯一键冲突 |
 | 500 | 服务端异常 |
+
+> 不使用 204：统一响应需要响应体，删除/退出返回 200 + `data: null`。
 
 ---
 
@@ -85,10 +97,14 @@ GET /api/styles?page=1&pageSize=20&keyword=T恤&status=DEV
 
 ```json
 {
-  "items": [],
-  "total": 0,
-  "page": 1,
-  "pageSize": 20
+  "code": 200,
+  "data": {
+    "items": [],
+    "total": 0,
+    "page": 1,
+    "pageSize": 20
+  },
+  "message": "ok"
 }
 ```
 
@@ -98,14 +114,18 @@ GET /api/styles?page=1&pageSize=20&keyword=T恤&status=DEV
 
 ```json
 {
-  "statusCode": 400,
-  "statusMessage": "邮箱格式不正确"
+  "code": 400,
+  "data": null,
+  "message": "邮箱格式不正确"
 }
 ```
 
-- 不使用 `{ code, data }` 包装
-- 字段级错误可放在 `data.fields`
+- 成功和失败使用同一外层结构
+- 错误时 `data` 固定为 `null`
+- `message` 必须是可以直接展示给用户的中文信息
 - 不返回数据库错误、SQL、堆栈
+- 字段级错误需要时再扩展统一结构，不单独另起格式
+- 未匹配的 `/api/*` 路径返回统一 404 结构
 
 ---
 

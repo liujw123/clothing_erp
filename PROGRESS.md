@@ -7,7 +7,7 @@
 
 **P1 业务数据模型（进行中） / P2 登录与会话（已完成）**
 
-- 已完成：P0 环境与脚手架、MySQL 8 + Prisma 7 连接层、`User` 表、RBAC 数据模型、15 角色 + 3 演示账号 seed、登录 API、登录页接入与全局守卫、后台布局
+- 已完成：P0 环境与脚手架、MySQL 8 + Prisma 7 连接层、`User` 表、RBAC 数据模型、15 角色 + 3 演示账号 seed、登录 API、登录页接入与全局守卫、后台布局、统一 API 响应
 - 下一步：确认下一张业务表；P3 权限中间件
 
 ## 功能进度
@@ -23,8 +23,9 @@
 | P2 登录与会话 | 已完成 | 登录/退出/刷新保持，未登录跳转 | `server/api/auth/*`、`server/api/users/me.get.ts`、`app/pages/login.vue` | API 三接口验证通过；CDP 端到端验证登录、退出、刷新保持、未登录跳转 | 依赖 P1 用户表 |
 | 前端登录接入与全局守卫 | 已完成 | 未登录跳登录；登录回原页；刷新保持；退出回登录 | `app/composables/useAuth.ts`、`app/middleware/auth.global.ts`、`app/utils/api-error.ts`、`app/pages/login.vue`、`app/pages/index.vue` | CDP 验证：`/` 未登录跳 `/login?redirect=/`；登录后回 `/`；刷新保持；退出回 `/login`；`lint`/`typecheck` 通过 | SSR 用 `useRequestFetch` 转发 Cookie；未登录页会产生预期 401 |
 | 后台布局（侧边栏 + 顶栏 + 内容区） | 已完成 | 登录后显示左侧菜单、顶部栏、右侧内容区；移动端菜单可开合 | `app/layouts/default.vue`、`app/pages/index.vue` | CDP 验证桌面与 390px 移动端布局；菜单、用户菜单、退出正常；`lint`/`typecheck` 通过 | 未实现菜单项标记“待开发”；菜单权限过滤留到 P3 |
-| 登录 API（sessions/me/logout） | 已完成 | 登录返回 201 + Cookie；错误密码 401；`users/me` 返回当前用户；退出返回 204 | `server/api/auth/sessions.post.ts`、`server/api/auth/sessions/current.delete.ts`、`server/api/users/me.get.ts`、`server/utils/auth.ts`、`shared/types/auth.ts` | 登录 201、角色/权限/范围正确；错误密码 401；`users/me` 200；退出 204；退出后 401；无 Cookie 401；`lint`/`typecheck` 通过 | JWT 只放 `userId`；Cookie `httpOnly + sameSite=lax`；前端未接 |
-| 认证接口 RESTful 迁移 | 已完成 | 旧 `/api/auth/login|logout|me` 删除；新 `sessions`/`users/me` 生效 | `server/api/auth/*`、`server/api/users/me.get.ts`、`AGENTS.md`、详细版文档 | 新接口 201/200/204；旧接口均 404；`lint`/`typecheck` 通过 | 不保留旧路径别名 |
+| 登录 API（sessions/me/logout） | 已完成 | 登录返回 201 + Cookie；错误密码 401；`users/me` 返回当前用户；退出返回 200 + `data: null` | `server/api/auth/sessions.post.ts`、`server/api/auth/sessions/current.delete.ts`、`server/api/users/me.get.ts`、`server/utils/auth.ts`、`shared/types/auth.ts` | 登录 201、角色/权限/范围正确；错误密码 401；`users/me` 200；退出 200 + null；退出后 401；无 Cookie 401；`lint`/`typecheck` 通过 | JWT 只放 `userId`；Cookie `httpOnly + sameSite=lax`；前端已接 |
+| 认证接口 RESTful 迁移 | 已完成 | 旧 `/api/auth/login|logout|me` 删除；新 `sessions`/`users/me` 生效 | `server/api/auth/*`、`server/api/users/me.get.ts`、`AGENTS.md`、详细版文档 | 新接口 201/200/200；旧接口均 404；`lint`/`typecheck` 通过 | 不保留旧路径别名 |
+| 统一 API 响应格式 | 已完成 | 所有接口返回 `{ code, data, message }`；失败 `data: null`；不使用 204 | `shared/types/api.ts`、`server/utils/response.ts`、`server/api/*`、`app/composables/useAuth.ts`、`app/utils/api-error.ts` | login 201、me 200、logout 200 + null、health 200；400/401/404 均带统一结构；`lint`/`typecheck` 通过 | `code` 与 HTTP 状态码一致；前端已解包 `data`；未知 API 路径由 catch-all 返回 404 |
 | P3 权限与数据范围 | 待开始 | 15 角色、菜单/按钮/接口、SELF/DEPT/ALL | `shared/permissions.ts`、`app/utils/menu.ts`、`server/utils/auth.ts` | — | 规则见主文档 2.3–2.8 |
 | P4 款管理 | 待开始 | 列表/新建/详情 + 数据范围过滤 | `server/services/style.ts`、`app/pages/styles/*` | — | 依赖 P1/P3 |
 | P5 流程实例化 | 待开始 | 4 套模板阶段数 9/9/7/6 | `shared/flow-templates.ts`、`server/services/flow.ts` | — | 依赖 P4 |
@@ -55,6 +56,7 @@
 | 2026-11-13 | 新接口遵循 RESTful：资源用复数名词，动作走子资源 | 统一 URL 和状态码，降低接口风格分叉 |
 | 2026-11-13 | 认证接口资源化：`POST /api/auth/sessions`、`DELETE /api/auth/sessions/current`、`GET /api/users/me` | 移除动作路径，与 RESTful 规范一致 |
 | 2026-11-13 | 前端当前用户存 `useState`，SSR 用 `useRequestFetch` 转发 Cookie | 刷新保持登录态，不引入 Pinia |
+| 2026-11-13 | API 统一 `{ code, data, message }`，`code` 与 HTTP 状态码一致，不使用 204 | 前后端统一处理成功/失败；204 无响应体，无法承载统一结构 |
 
 ## 变更记录
 
@@ -78,6 +80,9 @@
 - 登录页接入 `sessions` / `users/me` / `logout`；首页显示当前用户、角色、部门、数据范围与退出
 - CDP 端到端验证：未登录跳登录、登录回原页、刷新保持、退出回登录
 - 新增 `app/layouts/default.vue`：左侧菜单 + 顶部栏 + 右侧内容区；首页改为内容页
+- 新增 `defineApiHandler`，所有 API 统一返回 `{ code, data, message }`
+- 前端 `useAuth` 解包 `data`，错误提示读取 `message`
+- 同步更新 `AGENTS.md`、`docs/api/`、`README.md` 与详细版文档
 
 ### 2026-11-12
 

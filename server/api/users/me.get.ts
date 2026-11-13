@@ -1,5 +1,6 @@
 import { requireUser } from '../../utils/auth'
+import { defineApiHandler } from '../../utils/response'
 
-export default defineEventHandler(async (event) => {
+export default defineApiHandler(async (event) => {
   return await requireUser(event)
 })

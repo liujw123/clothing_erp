@@ -52,7 +52,7 @@ pnpm db:seed       # 写入角色与演示账号
 pnpm db:studio     # Prisma Studio
 ```
 
-连接验证：启动 `pnpm dev` 后访问 `http://localhost:3000/api/health`，返回 `{ ok: true, database: "mysql", latencyMs: ... }` 即接入成功。
+连接验证：启动 `pnpm dev` 后访问 `http://localhost:3000/api/health`，返回 `{ code: 200, data: { ok: true, database: "mysql", latencyMs: ... }, message: "ok" }` 即接入成功。
 
 当前已有 `User`、`Role`、`UserRole` 模型和演示数据；其余业务表待建。
 
@@ -74,5 +74,6 @@ public/   静态资源
 - [x] P2 登录 API（`sessions` / `users/me` / `logout`）
 - [x] P2 前端登录接入与全局守卫
 - [x] 后台布局（侧边栏 + 顶栏 + 内容区）
+- [x] 统一 API 响应 `{ code, data, message }`
 - [ ] 其余业务表（Customer / Style / FlowTemplate 等）
 - [ ] P3 权限与布局

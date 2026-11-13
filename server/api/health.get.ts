@@ -1,4 +1,6 @@
-export default defineEventHandler(async () => {
+import { defineApiHandler } from '../utils/response'
+
+export default defineApiHandler(async () => {
   const startedAt = Date.now()
   await prisma.$queryRaw`SELECT 1`
   return {

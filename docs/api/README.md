@@ -2,7 +2,8 @@
 
 > 版本：2026-11-13  
 > Base URL：`http://localhost:3000/api`  
-> 设计规范：[AGENTS.md 第 12 节](../../AGENTS.md)
+> 设计规范：[AGENTS.md 第 12 节](../../AGENTS.md)  
+> 响应格式：统一 `{ code, data, message }`
 
 ---
 
@@ -11,8 +12,11 @@
 ```powershell
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $body = @{ email = 'admin@erp.local'; password = '123456' } | ConvertTo-Json
-Invoke-RestMethod -Uri 'http://localhost:3000/api/auth/sessions' -Method Post -ContentType 'application/json' -Body $body -WebSession $session
-Invoke-RestMethod -Uri 'http://localhost:3000/api/users/me' -WebSession $session
+$login = Invoke-RestMethod -Uri 'http://localhost:3000/api/auth/sessions' -Method Post -ContentType 'application/json' -Body $body -WebSession $session
+$login.data.email
+
+$me = Invoke-RestMethod -Uri 'http://localhost:3000/api/users/me' -WebSession $session
+$me.data.name
 ```
 
 演示账号，密码统一为 `123456`：
@@ -46,9 +50,11 @@ Invoke-RestMethod -Uri 'http://localhost:3000/api/users/me' -WebSession $session
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/api/auth/sessions` | 登录，返回 201 |
-| DELETE | `/api/auth/sessions/current` | 退出，返回 204 |
+| DELETE | `/api/auth/sessions/current` | 退出，返回 200 + `data: null` |
 | GET | `/api/users/me` | 当前用户，返回 200 |
 | GET | `/api/health` | 健康检查，返回 200 |
+
+> 不使用 204；所有成功和失败响应都带统一结构。
 
 业务接口（款、任务、订单、工作台）尚未实现，各模块文档已预留结构，状态标为“待实现”。
 
