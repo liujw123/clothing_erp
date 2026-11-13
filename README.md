@@ -73,5 +73,6 @@ public/   静态资源
 - [x] User / Role / UserRole 模型与 seed
 - [x] P2 登录 API（`sessions` / `users/me` / `logout`）
 - [x] P2 前端登录接入与全局守卫
+- [x] 后台布局（侧边栏 + 顶栏 + 内容区）
 - [ ] 其余业务表（Customer / Style / FlowTemplate 等）
 - [ ] P3 权限与布局
