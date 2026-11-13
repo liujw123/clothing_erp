@@ -25,6 +25,8 @@ pnpm build
 pnpm db:seed    # 写入 15 个角色 + 3 个演示账号
 ```
 
+> 新增页面后如果 Tailwind 样式缺失，重启 dev server 或修改 `app/assets/css/main.css` 触发重新扫描。
+
 ## 数据库接入
 
 本机 MySQL 8.0 已运行时，用 root 或 DBA 账号执行一次：
@@ -75,5 +77,6 @@ public/   静态资源
 - [x] P2 前端登录接入与全局守卫
 - [x] 后台布局（侧边栏 + 顶栏 + 内容区）
 - [x] 统一 API 响应 `{ code, data, message }`
+- [x] 个人中心（资料 / 密码修改）
 - [ ] 其余业务表（Customer / Style / FlowTemplate 等）
 - [ ] P3 权限与布局

@@ -5,15 +5,18 @@ import { ROLE_DEFINITIONS } from '../shared/permissions'
 
 interface DemoUser {
   email: string
+  username: string
   name: string
+  phone: string
+  gender: string
   deptId: string
   roleCode: string
 }
 
 const demoUsers: DemoUser[] = [
-  { email: 'admin@erp.local', name: '系统管理员', deptId: 'MANAGEMENT', roleCode: 'ADMIN' },
-  { email: 'design.manager@erp.local', name: '设计主管', deptId: 'DESIGN', roleCode: 'DESIGN_MANAGER' },
-  { email: 'designer@erp.local', name: '设计师', deptId: 'DESIGN', roleCode: 'DESIGNER' }
+  { email: 'admin@erp.local', username: 'admin', name: '系统管理员', phone: '15888888888', gender: 'FEMALE', deptId: 'MANAGEMENT', roleCode: 'ADMIN' },
+  { email: 'design.manager@erp.local', username: 'design.manager', name: '设计主管', phone: '13900000000', gender: 'FEMALE', deptId: 'DESIGN', roleCode: 'DESIGN_MANAGER' },
+  { email: 'designer@erp.local', username: 'designer', name: '设计师', phone: '13700000000', gender: 'FEMALE', deptId: 'DESIGN', roleCode: 'DESIGNER' }
 ]
 
 const prisma = createPrismaClient()
@@ -44,15 +47,21 @@ async function main() {
     const user = await prisma.user.upsert({
       where: { email: demo.email },
       update: {
+        username: demo.username,
         name: demo.name,
         password: passwordHash,
+        phone: demo.phone,
+        gender: demo.gender,
         deptId: demo.deptId,
         active: true
       },
       create: {
         email: demo.email,
+        username: demo.username,
         name: demo.name,
         password: passwordHash,
+        phone: demo.phone,
+        gender: demo.gender,
         deptId: demo.deptId,
         active: true
       }

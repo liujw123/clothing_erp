@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-/* 显式扫描 app 目录，避免 dev 下新增页面未被 Tailwind 收录 */
+/* 显式扫描 app 目录，确保 dev 下新增页面被 Tailwind 收录；新增页面后如样式缺失可重启 dev */
 @source "../../";
 
 @theme static {

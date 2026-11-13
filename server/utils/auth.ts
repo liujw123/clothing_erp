@@ -22,8 +22,11 @@ interface UserWithRoles {
   id: string
   email: string
   name: string
+  phone: string | null
+  gender: string | null
   deptId: string | null
   active: boolean
+  createdAt: Date
   roles: UserRoleRecord[]
 }
 
@@ -105,10 +108,13 @@ export function toAuthUser(user: UserWithRoles): AuthUser {
     id: user.id,
     email: user.email,
     name: user.name,
+    phone: user.phone,
+    gender: user.gender,
     deptId: user.deptId,
     roles,
     permissions,
-    dataScope
+    dataScope,
+    createdAt: user.createdAt.toISOString()
   }
 }
 

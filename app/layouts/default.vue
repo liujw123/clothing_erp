@@ -36,9 +36,13 @@ const menuGroups: MenuGroup[] = [
 
 const route = useRoute()
 const sidebarOpen = ref(false)
+const userMenuOpen = ref(false)
 const { user, logout } = useAuth()
 
 const allMenuItems = menuGroups.flatMap(group => group.items)
+const pageTitles: Record<string, string> = {
+  '/profile': '个人中心'
+}
 
 const roleNames = computed(() => {
   const names = user.value?.roles.map(role => role.name) ?? []
@@ -49,7 +53,7 @@ const userInitial = computed(() => user.value?.name?.charAt(0) ?? '?')
 
 const currentTitle = computed(() => {
   const item = allMenuItems.find(menuItem => isActivePath(menuItem.to))
-  return item?.label ?? '工作台'
+  return item?.label ?? pageTitles[route.path] ?? '工作台'
 })
 
 function isActivePath(path: string) {
@@ -57,6 +61,16 @@ function isActivePath(path: string) {
     return route.path === '/'
   }
   return route.path === path || route.path.startsWith(`${path}/`)
+}
+
+function goProfile() {
+  userMenuOpen.value = false
+  navigateTo('/profile')
+}
+
+function handleLogout() {
+  userMenuOpen.value = false
+  logout()
 }
 
 watch(() => route.fullPath, () => {
@@ -197,7 +211,10 @@ watch(() => route.fullPath, () => {
 
           <span class="mx-1 hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" />
 
-          <UPopover :content="{ align: 'end', sideOffset: 8 }">
+          <UPopover
+            v-model:open="userMenuOpen"
+            :content="{ align: 'end', sideOffset: 8 }"
+          >
             <button
               type="button"
               class="flex items-center gap-2 rounded-full p-1 pr-2 transition hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -230,8 +247,20 @@ watch(() => route.fullPath, () => {
 
                 <button
                   type="button"
+                  class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  @click="goProfile"
+                >
+                  <UIcon
+                    name="i-lucide-user-round"
+                    class="size-4"
+                  />
+                  个人中心
+                </button>
+
+                <button
+                  type="button"
                   class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                  @click="logout"
+                  @click="handleLogout"
                 >
                   <UIcon
                     name="i-lucide-log-out"

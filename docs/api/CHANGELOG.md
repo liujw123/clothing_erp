@@ -9,6 +9,10 @@
   - 失败：`data: null`，`message` 为错误信息
 - 退出接口从 204 改为 200 + `data: null`，不再使用 204
 - 新增 `server/api/[...slug].ts`，未匹配的 API 路径返回统一 404 结构
+- 新增个人中心接口：
+  - `PATCH /api/users/me`：修改昵称、手机号、邮箱、性别
+  - `PATCH /api/users/me/password`：校验旧密码后修改新密码
+- `AuthUser` 增加 `phone`、`gender`、`createdAt` 字段
 - 接口文档从根目录 `API.md` 拆分到 `docs/api/`，按模块维护
 - 认证接口迁移为 RESTful：
   - `POST /api/auth/sessions`（登录，201）

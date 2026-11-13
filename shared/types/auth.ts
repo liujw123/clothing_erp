@@ -10,8 +10,11 @@ export interface AuthUser {
   id: string
   email: string
   name: string
+  phone: string | null
+  gender: string | null
   deptId: string | null
   roles: AuthRole[]
   permissions: string[]
   dataScope: DataScope
+  createdAt: string
 }

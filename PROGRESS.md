@@ -7,7 +7,7 @@
 
 **P1 业务数据模型（进行中） / P2 登录与会话（已完成）**
 
-- 已完成：P0 环境与脚手架、MySQL 8 + Prisma 7 连接层、`User` 表、RBAC 数据模型、15 角色 + 3 演示账号 seed、登录 API、登录页接入与全局守卫、后台布局、统一 API 响应
+- 已完成：P0 环境与脚手架、MySQL 8 + Prisma 7 连接层、`User` 表、RBAC 数据模型、15 角色 + 3 演示账号 seed、登录 API、登录页接入与全局守卫、后台布局、统一 API 响应、个人中心
 - 下一步：确认下一张业务表；P3 权限中间件
 
 ## 功能进度
@@ -17,7 +17,7 @@
 | Nuxt 4 项目骨架 | 已完成 | 项目可启动，lint/typecheck 通过 | `nuxt.config.ts`、`app/` | `pnpm lint`、`pnpm typecheck` 通过 | 已清理 starter 模板内容 |
 | Nuxt UI 4 + Tailwind CSS 4 | 已完成 | 页面样式生效 | `app/assets/css/main.css`、`app/app.vue` | 首页 Tailwind 样式正常 | 通过 Nuxt UI 集成 Tailwind 4 |
 | MySQL 8 + Prisma 7 连接层 | 已完成 | `/api/health` 返回 `ok: true` | `prisma/`、`server/utils/db.ts`、`server/utils/prisma.ts`、`server/api/health.get.ts` | `{"ok":true,"database":"mysql","latencyMs":1}` | 仅连接层，无业务模型 |
-| User 表 | 已完成 | `User` 模型可迁移，Prisma Client 可生成 | `prisma/schema.prisma`、`prisma/migrations/20261112160310_add_user/migration.sql` | `prisma validate` 通过；`prisma migrate status` 显示已同步；`prisma generate` 成功 | 已移除 `roleCode`；`deptId` 暂为字符串，Department 表待补 |
+| User 表 | 已完成 | `User` 模型可迁移，Prisma Client 可生成 | `prisma/schema.prisma`、`prisma/migrations/20261112160310_add_user/migration.sql` | `prisma validate` 通过；`prisma migrate status` 显示已同步；`prisma generate` 成功 | 已移除 `roleCode`；新增 `phone`、`gender`、`username`；`deptId` 暂为字符串，Department 表待补 |
 | RBAC 数据模型与种子 | 已完成 | `Role`/`UserRole`/`User.deptId` 可迁移；15 角色、3 演示账号可重复 seed | `prisma/schema.prisma`、`prisma/migrations/20261112162003_*`、`shared/permissions.ts`、`prisma/seed.ts`、`package.json` | `prisma migrate status` 已同步；Role=15、User=3、UserRole=3；`db:seed` 可重复执行；`lint`/`typecheck` 通过 | 种子为 upsert，不删除手工数据；其余 12 个演示账号待补 |
 | P1 业务数据模型 | 进行中 | 核心表可迁移，空库可重放 | `prisma/schema.prisma` | User/RBAC 迁移正常 | 其余业务表待开始 |
 | P2 登录与会话 | 已完成 | 登录/退出/刷新保持，未登录跳转 | `server/api/auth/*`、`server/api/users/me.get.ts`、`app/pages/login.vue` | API 三接口验证通过；CDP 端到端验证登录、退出、刷新保持、未登录跳转 | 依赖 P1 用户表 |
@@ -26,6 +26,7 @@
 | 登录 API（sessions/me/logout） | 已完成 | 登录返回 201 + Cookie；错误密码 401；`users/me` 返回当前用户；退出返回 200 + `data: null` | `server/api/auth/sessions.post.ts`、`server/api/auth/sessions/current.delete.ts`、`server/api/users/me.get.ts`、`server/utils/auth.ts`、`shared/types/auth.ts` | 登录 201、角色/权限/范围正确；错误密码 401；`users/me` 200；退出 200 + null；退出后 401；无 Cookie 401；`lint`/`typecheck` 通过 | JWT 只放 `userId`；Cookie `httpOnly + sameSite=lax`；前端已接 |
 | 认证接口 RESTful 迁移 | 已完成 | 旧 `/api/auth/login|logout|me` 删除；新 `sessions`/`users/me` 生效 | `server/api/auth/*`、`server/api/users/me.get.ts`、`AGENTS.md`、详细版文档 | 新接口 201/200/200；旧接口均 404；`lint`/`typecheck` 通过 | 不保留旧路径别名 |
 | 统一 API 响应格式 | 已完成 | 所有接口返回 `{ code, data, message }`；失败 `data: null`；不使用 204 | `shared/types/api.ts`、`server/utils/response.ts`、`server/api/*`、`app/composables/useAuth.ts`、`app/utils/api-error.ts` | login 201、me 200、logout 200 + null、health 200；400/401/404 均带统一结构；`lint`/`typecheck` 通过 | `code` 与 HTTP 状态码一致；前端已解包 `data`；未知 API 路径由 catch-all 返回 404 |
+| 个人中心（资料/密码） | 已完成 | 用户菜单可进入个人中心；展示个人信息；修改昵称/手机号/邮箱/性别；修改密码；头像只读 | `app/pages/profile.vue`、`app/layouts/default.vue`、`server/api/users/me.patch.ts`、`server/api/users/me/password.patch.ts`、`shared/types/auth.ts`、`prisma/schema.prisma`、`prisma/seed.ts` | 资料/密码接口验证通过；重复邮箱 409、旧密码错误 400、新密码可登录；CDP 验证页面、保存、密码页签、移动端无溢出；密码字段均在 form 内，无 DOM 警告；`lint`/`typecheck` 通过 | 头像为昵称首字，不提供上传；部门编码在前端映射为中文名 |
 | P3 权限与数据范围 | 待开始 | 15 角色、菜单/按钮/接口、SELF/DEPT/ALL | `shared/permissions.ts`、`app/utils/menu.ts`、`server/utils/auth.ts` | — | 规则见主文档 2.3–2.8 |
 | P4 款管理 | 待开始 | 列表/新建/详情 + 数据范围过滤 | `server/services/style.ts`、`app/pages/styles/*` | — | 依赖 P1/P3 |
 | P5 流程实例化 | 待开始 | 4 套模板阶段数 9/9/7/6 | `shared/flow-templates.ts`、`server/services/flow.ts` | — | 依赖 P4 |
@@ -39,6 +40,7 @@
 | `.env` 切回 `erp` 账号 | 高 | 当前 `.env` 使用 root/9527；应改为最小权限的 `erp`，root 只用于初始化 |
 | 确认下一张核心表 | 高 | User/RBAC 已完成，Customer / Style / FlowTemplate 等下一张表待拍板 |
 | 补齐其余演示账号 | 低 | 当前 seed 3 个账号，15 个角色已齐 |
+| 统一迁移文件表名大小写 | 中 | 本地 MySQL `lower_case_table_names=1`；迁移中 `user`/`User` 混用，部署到 Linux MySQL 前需验证空库重放 |
 | 补 `PROGRESS.md` 与文档的一致性检查 | 低 | 每个里程碑检查一次 |
 
 ## 决策记录
@@ -57,6 +59,7 @@
 | 2026-11-13 | 认证接口资源化：`POST /api/auth/sessions`、`DELETE /api/auth/sessions/current`、`GET /api/users/me` | 移除动作路径，与 RESTful 规范一致 |
 | 2026-11-13 | 前端当前用户存 `useState`，SSR 用 `useRequestFetch` 转发 Cookie | 刷新保持登录态，不引入 Pinia |
 | 2026-11-13 | API 统一 `{ code, data, message }`，`code` 与 HTTP 状态码一致，不使用 204 | 前后端统一处理成功/失败；204 无响应体，无法承载统一结构 |
+| 2026-11-13 | 个人中心昵称复用 `User.name`，头像只读；新增 `phone` / `gender` / `username` | 不额外引入 nickname/avatar 字段；手机号和性别用于个人资料展示与编辑 |
 
 ## 变更记录
 
@@ -83,6 +86,11 @@
 - 新增 `defineApiHandler`，所有 API 统一返回 `{ code, data, message }`
 - 前端 `useAuth` 解包 `data`，错误提示读取 `message`
 - 同步更新 `AGENTS.md`、`docs/api/`、`README.md` 与详细版文档
+- `User` 增加 `phone`、`gender`、`username`，恢复缺失的 profile/username 迁移文件
+- 新增 `/profile` 个人中心，用户菜单加入“个人中心”
+- 新增资料修改与密码修改接口；seed 补充手机号、性别、用户名
+- 个人中心资料/密码表单改为 `<form>`，补齐 `autocomplete` 与隐藏 `username`，消除浏览器 DOM 警告
+- 修复新增页面 Tailwind 未扫描问题：修改 `main.css` 触发重新扫描
 
 ### 2026-11-12
 
