@@ -72,6 +72,6 @@ public/   静态资源
 - [x] MySQL 8 + Prisma 7 连接层接入
 - [x] User / Role / UserRole 模型与 seed
 - [x] P2 登录 API（`sessions` / `users/me` / `logout`）
-- [ ] P2 前端登录接入与全局守卫
+- [x] P2 前端登录接入与全局守卫
 - [ ] 其余业务表（Customer / Style / FlowTemplate 等）
 - [ ] P3 权限与布局

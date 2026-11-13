@@ -13,15 +13,16 @@ interface DemoAccount {
 
 const form = reactive({
   email: '',
-  password: '',
-  remember: false
+  password: ''
 })
 
 const errors = reactive<{ email?: string, password?: string }>({})
 const loading = ref(false)
 const showPassword = ref(false)
-const notice = ref('')
+const errorMessage = ref('')
 const demoModalOpen = ref(false)
+const route = useRoute()
+const { login } = useAuth()
 
 const demoAccounts: DemoAccount[] = [
   { role: '管理员', email: 'admin@erp.local', desc: '全部菜单与数据' },
@@ -59,7 +60,7 @@ function fillDemo(email: string) {
   form.password = '123456'
   errors.email = undefined
   errors.password = undefined
-  notice.value = ''
+  errorMessage.value = ''
 }
 
 function selectDemo(account: DemoAccount) {
@@ -67,17 +68,28 @@ function selectDemo(account: DemoAccount) {
   demoModalOpen.value = false
 }
 
+function safeRedirect(value: unknown) {
+  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) {
+    return '/'
+  }
+  return value
+}
+
 async function handleSubmit() {
-  notice.value = ''
+  errorMessage.value = ''
   if (!validate()) {
     return
   }
 
-  // 前端预览：等登录接口接入后替换为真实请求
   loading.value = true
-  await new Promise(resolve => setTimeout(resolve, 500))
-  loading.value = false
-  notice.value = '登录接口尚未接入，当前页面仅用于界面预览。'
+  try {
+    await login(form.email.trim(), form.password)
+    await navigateTo(safeRedirect(route.query.redirect))
+  } catch (error) {
+    errorMessage.value = getApiErrorMessage(error, '登录失败，请稍后重试')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -204,11 +216,7 @@ async function handleSubmit() {
               </UInput>
             </UFormField>
 
-            <div class="flex items-center justify-between gap-3 pt-1">
-              <UCheckbox
-                v-model="form.remember"
-                label="记住我"
-              />
+            <div class="flex items-center justify-end pt-1">
               <span class="text-xs text-slate-500 dark:text-slate-400">
                 忘记密码请联系管理员
               </span>
@@ -224,11 +232,11 @@ async function handleSubmit() {
             />
 
             <UAlert
-              v-if="notice"
-              color="warning"
+              v-if="errorMessage"
+              color="error"
               variant="subtle"
-              icon="i-lucide-info"
-              :title="notice"
+              icon="i-lucide-circle-alert"
+              :title="errorMessage"
             />
           </form>
 
@@ -257,14 +265,14 @@ async function handleSubmit() {
         </div>
 
         <p class="mt-4 text-center text-[11px] text-slate-400 dark:text-slate-500">
-          当前为界面预览 · 登录接口尚未接入
+          内部系统 · 请使用公司账号登录
         </p>
       </section>
     </main>
 
     <footer class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 pb-6 text-[11px] text-slate-400 dark:text-slate-500">
       <span>© {{ year }} Clothing ERP</span>
-      <span>P0 · 登录界面预览</span>
+      <span>内部系统</span>
     </footer>
 
     <UModal
@@ -309,7 +317,7 @@ async function handleSubmit() {
         </div>
 
         <p class="mt-4 text-center text-[11px] text-slate-400 dark:text-slate-500">
-          密码统一为 123456 · 登录接口接入后可用
+          密码统一为 123456 · 仅限演示环境
         </p>
       </template>
     </UModal>
