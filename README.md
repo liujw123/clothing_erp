@@ -79,5 +79,7 @@ public/   静态资源
 - [x] 统一 API 响应 `{ code, data, message }`
 - [x] 个人中心（资料 / 密码修改）
 - [x] 流程模板只读（4 套模板）
-- [ ] 其余业务表（Customer / Style / FlowTemplate 等）
+- [x] Customer 表与客户接口
+- [x] 客户管理页面（列表 / 搜索 / 新建 / 编辑）
+- [ ] 其余业务表（Style / 订单等）
 - [ ] P3 权限与布局

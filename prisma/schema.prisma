@@ -58,3 +58,13 @@ model FlowTemplate {
   createdAt DateTime @default(now()) // 创建时间
   updatedAt DateTime @updatedAt // 更新时间
 }
+
+/// 客户档案。客户定开线与翻单需要，公司开发线选填。
+model Customer {
+  id        String   @id @default(cuid()) // 主键，cuid 字符串
+  code      String   @unique // 客户编码，全局唯一
+  name      String // 客户名称
+  country   String? // 国家/地区
+  createdAt DateTime @default(now()) // 创建时间
+  updatedAt DateTime @updatedAt // 更新时间
+}

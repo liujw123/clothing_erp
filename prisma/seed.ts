@@ -15,10 +15,21 @@ interface DemoUser {
   roleCode: string
 }
 
+interface DemoCustomer {
+  code: string
+  name: string
+  country: string
+}
+
 const demoUsers: DemoUser[] = [
   { email: 'admin@erp.local', username: 'admin', name: '系统管理员', phone: '15888888888', gender: 'FEMALE', deptId: 'MANAGEMENT', roleCode: 'ADMIN' },
   { email: 'design.manager@erp.local', username: 'design.manager', name: '设计主管', phone: '13900000000', gender: 'FEMALE', deptId: 'DESIGN', roleCode: 'DESIGN_MANAGER' },
   { email: 'designer@erp.local', username: 'designer', name: '设计师', phone: '13700000000', gender: 'FEMALE', deptId: 'DESIGN', roleCode: 'DESIGNER' }
+]
+
+const demoCustomers: DemoCustomer[] = [
+  { code: 'CUS-EU-001', name: '欧美客户 A', country: '美国' },
+  { code: 'CUS-JP-KR-001', name: '日韩客户 B', country: '日本' }
 ]
 
 const prisma = createPrismaClient()
@@ -64,6 +75,21 @@ async function main() {
     })
   }
 
+  for (const customer of demoCustomers) {
+    await prisma.customer.upsert({
+      where: { code: customer.code },
+      update: {
+        name: customer.name,
+        country: customer.country
+      },
+      create: {
+        code: customer.code,
+        name: customer.name,
+        country: customer.country
+      }
+    })
+  }
+
   for (const demo of demoUsers) {
     const user = await prisma.user.upsert({
       where: { email: demo.email },
@@ -103,7 +129,7 @@ async function main() {
     })
   }
 
-  console.log(`seed 完成：${ROLE_DEFINITIONS.length} 个角色，${demoUsers.length} 个演示账号，${Object.keys(FLOW_TEMPLATES).length} 个流程模板`)
+  console.log(`seed 完成：${ROLE_DEFINITIONS.length} 个角色，${demoUsers.length} 个演示账号，${Object.keys(FLOW_TEMPLATES).length} 个流程模板，${demoCustomers.length} 个客户`)
 }
 
 main()

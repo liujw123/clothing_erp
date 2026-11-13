@@ -17,6 +17,12 @@
   - `GET /api/flow-templates`
   - `GET /api/flow-templates/:code`
 - 新增 4 套流程模板 seed 与 `/templates` 管理员只读页面
+- 新增客户接口：
+  - `GET /api/customers`
+  - `GET /api/customers/:id`
+  - `POST /api/customers`
+  - `PATCH /api/customers/:id`
+- `Customer` 表与 2 个演示客户 seed
 - 接口文档从根目录 `API.md` 拆分到 `docs/api/`，按模块维护
 - 认证接口迁移为 RESTful：
   - `POST /api/auth/sessions`（登录，201）

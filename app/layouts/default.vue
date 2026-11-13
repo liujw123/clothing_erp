@@ -21,6 +21,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: '业务',
     items: [
+      { label: '客户管理', to: '/customers', icon: 'i-lucide-building-2', permission: 'style:read' },
       { label: '款管理', to: '/styles', icon: 'i-lucide-shirt', disabled: true },
       { label: '任务中心', to: '/tasks', icon: 'i-lucide-list-checks', disabled: true },
       { label: '订单管理', to: '/orders', icon: 'i-lucide-shopping-cart', disabled: true }

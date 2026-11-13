@@ -38,6 +38,7 @@ $me.data.name
 | 用户 | [users.md](./users.md) | 已实现当前用户、资料与密码修改 |
 | 健康检查 | [health.md](./health.md) | 已实现 |
 | 流程模板 | [flow-templates.md](./flow-templates.md) | 已实现（只读） |
+| 客户 | [customers.md](./customers.md) | 已实现 |
 | 款管理 | [styles.md](./styles.md) | 待实现 |
 | 任务 | [tasks.md](./tasks.md) | 待实现 |
 | 订单 / 变更 | [orders.md](./orders.md) | 待实现 |
@@ -57,6 +58,10 @@ $me.data.name
 | PATCH | `/api/users/me/password` | 修改当前用户密码 |
 | GET | `/api/flow-templates` | 流程模板列表（管理员） |
 | GET | `/api/flow-templates/:code` | 流程模板详情（管理员） |
+| GET | `/api/customers` | 客户列表 |
+| GET | `/api/customers/:id` | 客户详情 |
+| POST | `/api/customers` | 新建客户 |
+| PATCH | `/api/customers/:id` | 修改客户 |
 | GET | `/api/health` | 健康检查，返回 200 |
 
 > 不使用 204；所有成功和失败响应都带统一结构。
