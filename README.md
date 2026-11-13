@@ -8,7 +8,11 @@
 - Vue 3 + TypeScript
 - Nuxt UI 4 + Tailwind CSS 4
 - MySQL 8 + Prisma 7（driver adapter：`@prisma/adapter-mariadb`）
-- JWT + RBAC（P2/P3 接入）
+- JWT + RBAC（登录 API 已完成，权限中间件待接）
+
+## 接口文档
+
+见 [docs/api/README.md](./docs/api/README.md)。
 
 ## 开发
 
@@ -18,6 +22,7 @@ pnpm dev        # http://localhost:3000
 pnpm lint
 pnpm typecheck
 pnpm build
+pnpm db:seed    # 写入 15 个角色 + 3 个演示账号
 ```
 
 ## 数据库接入
@@ -42,20 +47,22 @@ FLUSH PRIVILEGES;
 ```bash
 cp .env.example .env
 pnpm db:generate   # 生成 Prisma Client
-pnpm db:migrate    # 有模型后再执行迁移
+pnpm db:migrate    # 执行迁移
+pnpm db:seed       # 写入角色与演示账号
 pnpm db:studio     # Prisma Studio
 ```
 
 连接验证：启动 `pnpm dev` 后访问 `http://localhost:3000/api/health`，返回 `{ ok: true, database: "mysql", latencyMs: ... }` 即接入成功。
 
-> 当前只接入数据库连接层，尚未定义业务模型。模型与种子数据留到后续阶段。
+当前已有 `User`、`Role`、`UserRole` 模型和演示数据；其余业务表待建。
 
 ## 目录
 
 ```text
 app/      页面、组件、布局、样式
 server/   Nitro API、Prisma Client（server/generated 自动生成）
-prisma/   数据模型（当前为空）
+prisma/   schema、迁移、seed
+docs/api/ 接口文档（按模块拆分）
 public/   静态资源
 ```
 
@@ -63,6 +70,8 @@ public/   静态资源
 
 - [x] P0 环境与脚手架（Nuxt 4 + Nuxt UI 4 + Tailwind CSS 4）
 - [x] MySQL 8 + Prisma 7 连接层接入
-- [ ] 业务数据模型与 Seed
-- [ ] P2 登录与会话
+- [x] User / Role / UserRole 模型与 seed
+- [x] P2 登录 API（`sessions` / `users/me` / `logout`）
+- [ ] P2 前端登录接入与全局守卫
+- [ ] 其余业务表（Customer / Style / FlowTemplate 等）
 - [ ] P3 权限与布局

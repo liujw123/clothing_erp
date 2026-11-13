@@ -35,6 +35,7 @@ export default defineEventHandler(async (event) => {
 
   const token = await signToken(user.id)
   setAuthCookie(event, token)
+  setResponseStatus(event, 201)
 
   return toAuthUser(user)
 })

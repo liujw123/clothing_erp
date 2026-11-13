@@ -16,6 +16,7 @@
   - `服装外贸ERP开发实施说明-详细版.md`：技术细节参考
   - `PROGRESS.md`：功能进度与变更记录
   - `README.md`：启动、环境、命令
+  - `docs/api/README.md`：接口契约与调用示例
 
 > 文档与代码冲突时，以代码和最新 `PROGRESS.md` 为准；发现文档过期要顺手修正。
 
@@ -341,11 +342,10 @@ CRUD 之外的动作优先建模为子资源，不把动词写进 URL：
 ### 12.7 认证接口
 
 - 会话用 httpOnly Cookie，不在响应体返回 token
-- 新接口按资源化设计：
-  - `POST /api/auth/sessions`：登录
-  - `DELETE /api/auth/sessions/current`：退出
-  - `GET /api/users/me`：当前用户
-- 现有 `POST /api/auth/login`、`POST /api/auth/logout`、`GET /api/auth/me` 为已实现接口，属于临时例外；修改认证模块时迁移到上面的资源路径，不新增同类动词路径
+- 认证会话按资源化设计：
+  - `POST /api/auth/sessions`：登录，成功返回 201
+  - `DELETE /api/auth/sessions/current`：退出，成功返回 204
+  - `GET /api/users/me`：当前用户，成功返回 200
 - `GET /api/health` 为运维探针，不受资源命名约束
 
 ### 12.8 分层要求
