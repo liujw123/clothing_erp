@@ -7,7 +7,7 @@
 
 **P1 业务数据模型（进行中） / P2 登录与会话（已完成）**
 
-- 已完成：P0 环境与脚手架、MySQL 8 + Prisma 7 连接层、`User` 表、RBAC 数据模型、15 角色 + 3 演示账号 seed、登录 API、登录页接入与全局守卫、后台布局、统一 API 响应、个人中心
+- 已完成：P0 环境与脚手架、MySQL 8 + Prisma 7 连接层、`User` 表、RBAC 数据模型、15 角色 + 3 演示账号 seed、登录 API、登录页接入与全局守卫、后台布局、统一 API 响应、个人中心、流程模板只读
 - 下一步：确认下一张业务表；P3 权限中间件
 
 ## 功能进度
@@ -27,6 +27,7 @@
 | 认证接口 RESTful 迁移 | 已完成 | 旧 `/api/auth/login|logout|me` 删除；新 `sessions`/`users/me` 生效 | `server/api/auth/*`、`server/api/users/me.get.ts`、`AGENTS.md`、详细版文档 | 新接口 201/200/200；旧接口均 404；`lint`/`typecheck` 通过 | 不保留旧路径别名 |
 | 统一 API 响应格式 | 已完成 | 所有接口返回 `{ code, data, message }`；失败 `data: null`；不使用 204 | `shared/types/api.ts`、`server/utils/response.ts`、`server/api/*`、`app/composables/useAuth.ts`、`app/utils/api-error.ts` | login 201、me 200、logout 200 + null、health 200；400/401/404 均带统一结构；`lint`/`typecheck` 通过 | `code` 与 HTTP 状态码一致；前端已解包 `data`；未知 API 路径由 catch-all 返回 404 |
 | 个人中心（资料/密码） | 已完成 | 用户菜单可进入个人中心；展示个人信息；修改昵称/手机号/邮箱/性别；修改密码；头像只读 | `app/pages/profile.vue`、`app/layouts/default.vue`、`server/api/users/me.patch.ts`、`server/api/users/me/password.patch.ts`、`shared/types/auth.ts`、`prisma/schema.prisma`、`prisma/seed.ts` | 资料/密码接口验证通过；重复邮箱 409、旧密码错误 400、新密码可登录；CDP 验证页面、保存、密码页签、移动端无溢出；密码字段均在 form 内，无 DOM 警告；`lint`/`typecheck` 通过 | 头像为昵称首字，不提供上传；部门编码在前端映射为中文名 |
+| 流程模板只读 | 已完成 | 4 套模板可查询；阶段数 9/9/7/6；管理员菜单可见，非管理员 403；页面只读 | `shared/flow-templates.ts`、`prisma/schema.prisma`、`prisma/migrations/20261113081706_*`、`prisma/seed.ts`、`server/services/flow-template.ts`、`server/api/flow-templates/*`、`app/pages/templates.vue`、`app/layouts/default.vue` | API 返回 4 套模板，阶段数 9/9/7/6；管理员页面正常，设计师菜单隐藏且接口 403；`lint`/`typecheck` 通过 | 模板配置为 P5 实例化基础；只读，不支持编辑；非管理员直接访问显示“无权限” |
 | P3 权限与数据范围 | 待开始 | 15 角色、菜单/按钮/接口、SELF/DEPT/ALL | `shared/permissions.ts`、`app/utils/menu.ts`、`server/utils/auth.ts` | — | 规则见主文档 2.3–2.8 |
 | P4 款管理 | 待开始 | 列表/新建/详情 + 数据范围过滤 | `server/services/style.ts`、`app/pages/styles/*` | — | 依赖 P1/P3 |
 | P5 流程实例化 | 待开始 | 4 套模板阶段数 9/9/7/6 | `shared/flow-templates.ts`、`server/services/flow.ts` | — | 依赖 P4 |
@@ -38,7 +39,7 @@
 | 事项 | 优先级 | 说明 |
 |---|---|---|
 | `.env` 切回 `erp` 账号 | 高 | 当前 `.env` 使用 root/9527；应改为最小权限的 `erp`，root 只用于初始化 |
-| 确认下一张核心表 | 高 | User/RBAC 已完成，Customer / Style / FlowTemplate 等下一张表待拍板 |
+| 确认下一张核心表 | 高 | User/RBAC/FlowTemplate 已完成，Customer / Style / 订单等下一张表待拍板 |
 | 补齐其余演示账号 | 低 | 当前 seed 3 个账号，15 个角色已齐 |
 | 统一迁移文件表名大小写 | 中 | 本地 MySQL `lower_case_table_names=1`；迁移中 `user`/`User` 混用，部署到 Linux MySQL 前需验证空库重放 |
 | 补 `PROGRESS.md` 与文档的一致性检查 | 低 | 每个里程碑检查一次 |
@@ -60,6 +61,7 @@
 | 2026-11-13 | 前端当前用户存 `useState`，SSR 用 `useRequestFetch` 转发 Cookie | 刷新保持登录态，不引入 Pinia |
 | 2026-11-13 | API 统一 `{ code, data, message }`，`code` 与 HTTP 状态码一致，不使用 204 | 前后端统一处理成功/失败；204 无响应体，无法承载统一结构 |
 | 2026-11-13 | 个人中心昵称复用 `User.name`，头像只读；新增 `phone` / `gender` / `username` | 不额外引入 nickname/avatar 字段；手机号和性别用于个人资料展示与编辑 |
+| 2026-11-13 | 流程模板只读，不支持编辑；4 套模板由 seed 写入 | 模板是固定配置，先保证 P5 实例化有单一数据源 |
 
 ## 变更记录
 
@@ -90,6 +92,9 @@
 - 新增 `/profile` 个人中心，用户菜单加入“个人中心”
 - 新增资料修改与密码修改接口；seed 补充手机号、性别、用户名
 - 个人中心资料/密码表单改为 `<form>`，补齐 `autocomplete` 与隐藏 `username`，消除浏览器 DOM 警告
+- 新增 `FlowTemplate` 表、4 套模板配置与 seed；新增只读 API `/api/flow-templates`
+- 新增 `/templates` 管理员只读页面；侧边栏按 `admin:template` 显示/隐藏菜单
+- 修复 `seed.ts` 中 `FlowTemplateConfig` 写入 Prisma `Json` 字段的类型错误
 - 修复新增页面 Tailwind 未扫描问题：修改 `main.css` 触发重新扫描
 
 ### 2026-11-12

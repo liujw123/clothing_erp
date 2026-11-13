@@ -49,3 +49,12 @@ model User {
 
   @@index([deptId])
 }
+
+/// 流程模板。config 存阶段与任务配置，供只读展示和后续实例化。
+model FlowTemplate {
+  code      String   @id // COMPANY / CUSTOM_2 / CUSTOM_3 / REPEAT
+  name      String // 模板名称
+  config    Json // FlowTemplateConfig，阶段与任务配置
+  createdAt DateTime @default(now()) // 创建时间
+  updatedAt DateTime @updatedAt // 更新时间
+}

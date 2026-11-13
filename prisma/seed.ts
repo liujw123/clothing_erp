@@ -1,6 +1,8 @@
 import 'dotenv/config'
 import bcrypt from 'bcryptjs'
+import type { Prisma } from '../server/generated/prisma/client'
 import { createPrismaClient } from '../server/utils/db'
+import { FLOW_TEMPLATES } from '../shared/flow-templates'
 import { ROLE_DEFINITIONS } from '../shared/permissions'
 
 interface DemoUser {
@@ -21,6 +23,10 @@ const demoUsers: DemoUser[] = [
 
 const prisma = createPrismaClient()
 
+function toJsonValue(value: unknown): Prisma.InputJsonValue {
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
+}
+
 async function main() {
   const passwordHash = await bcrypt.hash('123456', 10)
 
@@ -39,6 +45,21 @@ async function main() {
         permissions: role.permissions,
         dataScope: role.dataScope,
         active: true
+      }
+    })
+  }
+
+  for (const [code, template] of Object.entries(FLOW_TEMPLATES)) {
+    await prisma.flowTemplate.upsert({
+      where: { code },
+      update: {
+        name: template.name,
+        config: toJsonValue(template.config)
+      },
+      create: {
+        code,
+        name: template.name,
+        config: toJsonValue(template.config)
       }
     })
   }
@@ -82,7 +103,7 @@ async function main() {
     })
   }
 
-  console.log(`seed 完成：${ROLE_DEFINITIONS.length} 个角色，${demoUsers.length} 个演示账号`)
+  console.log(`seed 完成：${ROLE_DEFINITIONS.length} 个角色，${demoUsers.length} 个演示账号，${Object.keys(FLOW_TEMPLATES).length} 个流程模板`)
 }
 
 main()

@@ -4,6 +4,7 @@ interface MenuItem {
   to: string
   icon: string
   disabled?: boolean
+  permission?: string
 }
 
 interface MenuGroup {
@@ -28,8 +29,8 @@ const menuGroups: MenuGroup[] = [
   {
     label: '系统',
     items: [
-      { label: '用户管理', to: '/users', icon: 'i-lucide-users', disabled: true },
-      { label: '流程模板', to: '/templates', icon: 'i-lucide-workflow', disabled: true }
+      { label: '用户管理', to: '/users', icon: 'i-lucide-users', disabled: true, permission: 'admin:user' },
+      { label: '流程模板', to: '/templates', icon: 'i-lucide-workflow', permission: 'admin:template' }
     ]
   }
 ]
@@ -37,12 +38,20 @@ const menuGroups: MenuGroup[] = [
 const route = useRoute()
 const sidebarOpen = ref(false)
 const userMenuOpen = ref(false)
-const { user, logout } = useAuth()
+const { user, logout, can } = useAuth()
 
 const allMenuItems = menuGroups.flatMap(group => group.items)
 const pageTitles: Record<string, string> = {
   '/profile': '个人中心'
 }
+
+const visibleMenuGroups = computed(() => menuGroups
+  .map(group => ({
+    ...group,
+    items: group.items.filter(item => !item.permission || can(item.permission))
+  }))
+  .filter(group => group.items.length > 0)
+)
 
 const roleNames = computed(() => {
   const names = user.value?.roles.map(role => role.name) ?? []
@@ -112,7 +121,7 @@ watch(() => route.fullPath, () => {
 
       <nav class="flex-1 space-y-6 overflow-y-auto px-3 py-5">
         <div
-          v-for="group in menuGroups"
+          v-for="group in visibleMenuGroups"
           :key="group.label ?? 'main'"
         >
           <p

@@ -144,3 +144,11 @@ export async function requireUser(event: H3Event): Promise<AuthUser> {
 
   return toAuthUser(user)
 }
+
+export async function requirePermission(event: H3Event, code: string): Promise<AuthUser> {
+  const user = await requireUser(event)
+  if (!user.permissions.includes('*') && !user.permissions.includes(code)) {
+    throw createError({ statusCode: 403, statusMessage: '无权限' })
+  }
+  return user
+}

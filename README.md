@@ -78,5 +78,6 @@ public/   静态资源
 - [x] 后台布局（侧边栏 + 顶栏 + 内容区）
 - [x] 统一 API 响应 `{ code, data, message }`
 - [x] 个人中心（资料 / 密码修改）
+- [x] 流程模板只读（4 套模板）
 - [ ] 其余业务表（Customer / Style / FlowTemplate 等）
 - [ ] P3 权限与布局

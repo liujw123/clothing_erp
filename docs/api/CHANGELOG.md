@@ -13,6 +13,10 @@
   - `PATCH /api/users/me`：修改昵称、手机号、邮箱、性别
   - `PATCH /api/users/me/password`：校验旧密码后修改新密码
 - `AuthUser` 增加 `phone`、`gender`、`createdAt` 字段
+- 新增流程模板只读接口：
+  - `GET /api/flow-templates`
+  - `GET /api/flow-templates/:code`
+- 新增 4 套流程模板 seed 与 `/templates` 管理员只读页面
 - 接口文档从根目录 `API.md` 拆分到 `docs/api/`，按模块维护
 - 认证接口迁移为 RESTful：
   - `POST /api/auth/sessions`（登录，201）
