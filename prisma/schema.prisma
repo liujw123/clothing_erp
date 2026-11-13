@@ -6,3 +6,43 @@ generator client {
 datasource db {
   provider = "mysql"
 }
+
+/// 系统角色。permissions 存权限码数组，dataScope 决定可见数据范围。
+model Role {
+  code        String   @id // 角色编码，如 ADMIN / DESIGNER
+  name        String // 角色名称
+  permissions Json // string[]，如 ["style:read", "task:submit"]
+  dataScope   String   @default("SELF") // SELF | DEPT | ALL
+  active      Boolean  @default(true) // 是否启用
+  createdAt   DateTime @default(now()) // 创建时间
+  updatedAt   DateTime @updatedAt // 更新时间
+
+  users UserRole[] // 该角色下的用户关联
+}
+
+/// 用户与角色的多对多关系，支持一人多角色（兼岗）。
+model UserRole {
+  userId   String // 用户 ID
+  roleCode String // 角色编码
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade) // 关联用户，删除用户时级联删除
+  role     Role   @relation(fields: [roleCode], references: [code], onDelete: Restrict) // 关联角色，角色被引用时禁止删除
+
+  @@id([userId, roleCode]) // 联合主键，同一用户不能重复分配同一角色
+  @@index([roleCode]) // 按角色查询用户
+}
+
+/// 系统用户。密码字段存 bcrypt 哈希；deptId 是 DEPT 数据范围的边界。
+model User {
+  id        String   @id @default(cuid()) // 主键，cuid 字符串
+  email     String   @unique // 登录邮箱，全局唯一
+  name      String // 用户姓名 / 显示名称
+  password  String // bcrypt 密码哈希，不存明文
+  deptId    String? // 部门编码，暂用字符串，后续接入 Department 表
+  active    Boolean  @default(true) // 是否启用，禁用后不能登录
+  createdAt DateTime @default(now()) // 创建时间
+  updatedAt DateTime @updatedAt // 更新时间
+
+  roles UserRole[] // 该用户拥有的角色
+
+  @@index([deptId])
+}

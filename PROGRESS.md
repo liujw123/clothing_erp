@@ -1,14 +1,14 @@
 # 项目进度
 
 > 规则见 `AGENTS.md`。每开始/完成一个功能都要更新本文件。
-> 最近更新：2026-11-12
+> 最近更新：2026-11-13
 
 ## 当前阶段
 
-**P1 业务数据模型（待开始）**
+**P1 业务数据模型（进行中）**
 
-- 已完成：P0 环境与脚手架、MySQL 8 + Prisma 7 连接层
-- 下一步：确认业务模型范围 → 建表 → 迁移 → 种子数据
+- 已完成：P0 环境与脚手架、MySQL 8 + Prisma 7 连接层、`User` 表、RBAC 数据模型、15 角色 + 3 演示账号 seed
+- 下一步：登录接口与会话，或确认下一张业务表
 
 ## 功能进度
 
@@ -17,7 +17,9 @@
 | Nuxt 4 项目骨架 | 已完成 | 项目可启动，lint/typecheck 通过 | `nuxt.config.ts`、`app/` | `pnpm lint`、`pnpm typecheck` 通过 | 已清理 starter 模板内容 |
 | Nuxt UI 4 + Tailwind CSS 4 | 已完成 | 页面样式生效 | `app/assets/css/main.css`、`app/app.vue` | 首页 Tailwind 样式正常 | 通过 Nuxt UI 集成 Tailwind 4 |
 | MySQL 8 + Prisma 7 连接层 | 已完成 | `/api/health` 返回 `ok: true` | `prisma/`、`server/utils/db.ts`、`server/utils/prisma.ts`、`server/api/health.get.ts` | `{"ok":true,"database":"mysql","latencyMs":1}` | 仅连接层，无业务模型 |
-| P1 业务数据模型 | 待开始 | 核心表可迁移，空库可重放 | `prisma/schema.prisma` | — | 需先确认模型范围 |
+| User 表 | 已完成 | `User` 模型可迁移，Prisma Client 可生成 | `prisma/schema.prisma`、`prisma/migrations/20261112160310_add_user/migration.sql` | `prisma validate` 通过；`prisma migrate status` 显示已同步；`prisma generate` 成功 | 已移除 `roleCode`；`deptId` 暂为字符串，Department 表待补 |
+| RBAC 数据模型与种子 | 已完成 | `Role`/`UserRole`/`User.deptId` 可迁移；15 角色、3 演示账号可重复 seed | `prisma/schema.prisma`、`prisma/migrations/20261112162003_*`、`shared/permissions.ts`、`prisma/seed.ts`、`package.json` | `prisma migrate status` 已同步；Role=15、User=3、UserRole=3；`db:seed` 可重复执行；`lint`/`typecheck` 通过 | 种子为 upsert，不删除手工数据；其余 12 个演示账号待补 |
+| P1 业务数据模型 | 进行中 | 核心表可迁移，空库可重放 | `prisma/schema.prisma` | User/RBAC 迁移正常 | 其余业务表待开始 |
 | P2 登录与会话 | 待开始 | 登录/退出/刷新保持，未登录跳转 | `server/api/auth/*`、`app/pages/login.vue` | — | 依赖 P1 用户表 |
 | P3 权限与数据范围 | 待开始 | 15 角色、菜单/按钮/接口、SELF/DEPT/ALL | `shared/permissions.ts`、`app/utils/menu.ts`、`server/utils/auth.ts` | — | 规则见主文档 2.3–2.8 |
 | P4 款管理 | 待开始 | 列表/新建/详情 + 数据范围过滤 | `server/services/style.ts`、`app/pages/styles/*` | — | 依赖 P1/P3 |
@@ -30,8 +32,8 @@
 | 事项 | 优先级 | 说明 |
 |---|---|---|
 | `.env` 切回 `erp` 账号 | 高 | 当前 `.env` 使用 root/9527；应改为最小权限的 `erp`，root 只用于初始化 |
-| 确认 P1 模型范围 | 高 | 只做核心表还是先做最小闭环，需要拍板 |
-| 初始化演示账号与种子数据 | 中 | 依赖 P1 模型 |
+| 确认下一张核心表 | 高 | User/RBAC 已完成，Customer / Style / FlowTemplate 等下一张表待拍板 |
+| 补齐其余演示账号 | 低 | 当前 seed 3 个账号，15 个角色已齐 |
 | 补 `PROGRESS.md` 与文档的一致性检查 | 低 | 每个里程碑检查一次 |
 
 ## 决策记录
@@ -43,8 +45,21 @@
 | 2026-11-12 | 数据权限只做 `SELF / DEPT / ALL` 三档 | 组织树未稳定，避免过度设计 |
 | 2026-11-12 | 权限码只描述动作，不拼数据范围 | 防止权限码爆炸，范围独立字段表达 |
 | 2026-11-12 | Tailwind 4 通过 Nuxt UI 集成，不额外装 `@tailwindcss/vite` | 避免重复处理，官方推荐方式 |
+| 2026-11-13 | `User` 表先只建 8 个字段，`roleCode` 用字符串 | 先跑通登录；Role/UserRole 等 P3 再加，避免过早关联（已被 2026-11-13 的 RBAC 决策取代） |
+| 2026-11-13 | 采用 `Role` + `UserRole` + `User.deptId`，移除 `User.roleCode` | 支持兼岗多角色和 DEPT 数据范围；表为空，改造成本最低 |
 
 ## 变更记录
+
+### 2026-11-13
+
+- 新增 `User` 模型并恢复缺失的 `migration.sql`（checksum 与 `_prisma_migrations` 记录一致）
+- `prisma migrate status` 确认数据库已同步；重新生成 Prisma Client
+- 为 `User` 每个字段补充中文备注
+- 新增 `Role`、`UserRole`，`User` 增加 `deptId`、移除 `roleCode`
+- 新增 `shared/permissions.ts`（15 个角色定义）与 `prisma/seed.ts`（3 个演示账号）
+- 新增依赖 `bcryptjs`、`tsx`，并增加 `db:seed` 脚本
+- 新增 `prisma/tsconfig.json` 与 `@types/node`，修复 seed 脚本中 `process` 的编辑器类型报错
+- 为 `Role`、`UserRole` 的字段和关系补充中文备注
 
 ### 2026-11-12
 
