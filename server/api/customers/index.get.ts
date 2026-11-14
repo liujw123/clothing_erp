@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PERMISSIONS } from '#shared/permissions'
 import { listCustomers } from '../../services/customer'
 import { requirePermission } from '../../utils/auth'
 import { defineApiHandler } from '../../utils/response'
@@ -10,7 +11,7 @@ const querySchema = z.object({
 })
 
 export default defineApiHandler(async (event) => {
-  await requirePermission(event, 'style:read')
+  await requirePermission(event, PERMISSIONS.STYLE_READ)
 
   const parsed = querySchema.safeParse(getQuery(event))
   if (!parsed.success) {

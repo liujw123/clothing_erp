@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ApiResponse } from '#shared/types/api'
+import { PERMISSIONS } from '#shared/permissions'
 
 useHead({ title: '客户管理' })
 
@@ -173,7 +174,7 @@ onMounted(loadCustomers)
       </div>
 
       <UButton
-        v-if="can('style:create')"
+        v-if="can(PERMISSIONS.STYLE_CREATE)"
         icon="i-lucide-plus"
         label="新建客户"
         @click="openCreate"
@@ -301,7 +302,7 @@ onMounted(loadCustomers)
                 </td>
                 <td class="px-5 py-4 text-right">
                   <UButton
-                    v-if="can('style:update')"
+                    v-if="can(PERMISSIONS.STYLE_UPDATE)"
                     color="neutral"
                     variant="ghost"
                     size="xs"

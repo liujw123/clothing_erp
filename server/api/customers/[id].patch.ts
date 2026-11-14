@@ -1,5 +1,6 @@
 import { getRouterParam } from 'h3'
 import { z } from 'zod'
+import { PERMISSIONS } from '#shared/permissions'
 import { updateCustomer } from '../../services/customer'
 import { requirePermission } from '../../utils/auth'
 import { defineApiHandler } from '../../utils/response'
@@ -11,7 +12,7 @@ const customerSchema = z.object({
 })
 
 export default defineApiHandler(async (event) => {
-  await requirePermission(event, 'style:update')
+  await requirePermission(event, PERMISSIONS.STYLE_UPDATE)
 
   const id = getRouterParam(event, 'id')
   if (!id) {

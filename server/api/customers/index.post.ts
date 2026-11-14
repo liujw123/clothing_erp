@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PERMISSIONS } from '#shared/permissions'
 import { createCustomer } from '../../services/customer'
 import { requirePermission } from '../../utils/auth'
 import { defineApiHandler } from '../../utils/response'
@@ -10,7 +11,7 @@ const customerSchema = z.object({
 })
 
 export default defineApiHandler(async (event) => {
-  await requirePermission(event, 'style:create')
+  await requirePermission(event, PERMISSIONS.STYLE_CREATE)
 
   const body: unknown = await readBody(event)
   const parsed = customerSchema.safeParse(body)

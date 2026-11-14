@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { PERMISSIONS } from '#shared/permissions'
+import type { PermissionCode } from '#shared/permissions'
+
 interface MenuItem {
   label: string
   to: string
   icon: string
   disabled?: boolean
-  permission?: string
+  permission?: PermissionCode
 }
 
 interface MenuGroup {
@@ -21,7 +24,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: '业务',
     items: [
-      { label: '客户管理', to: '/customers', icon: 'i-lucide-building-2', permission: 'style:read' },
+      { label: '客户管理', to: '/customers', icon: 'i-lucide-building-2', permission: PERMISSIONS.STYLE_READ },
       { label: '款管理', to: '/styles', icon: 'i-lucide-shirt', disabled: true },
       { label: '任务中心', to: '/tasks', icon: 'i-lucide-list-checks', disabled: true },
       { label: '订单管理', to: '/orders', icon: 'i-lucide-shopping-cart', disabled: true }
@@ -30,8 +33,8 @@ const menuGroups: MenuGroup[] = [
   {
     label: '系统',
     items: [
-      { label: '用户管理', to: '/users', icon: 'i-lucide-users', disabled: true, permission: 'admin:user' },
-      { label: '流程模板', to: '/templates', icon: 'i-lucide-workflow', permission: 'admin:template' }
+      { label: '用户管理', to: '/users', icon: 'i-lucide-users', disabled: true, permission: PERMISSIONS.ADMIN_USER },
+      { label: '流程模板', to: '/templates', icon: 'i-lucide-workflow', permission: PERMISSIONS.ADMIN_TEMPLATE }
     ]
   }
 ]

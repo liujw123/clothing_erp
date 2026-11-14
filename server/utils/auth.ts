@@ -1,7 +1,8 @@
 import type { H3Event } from 'h3'
 import { createError, deleteCookie, getCookie, setCookie } from 'h3'
 import { SignJWT, jwtVerify } from 'jose'
-import type { DataScope } from '#shared/permissions'
+import type { DataScope, PermissionCode } from '#shared/permissions'
+import { hasPermission, widestDataScope } from '#shared/permissions'
 import type { AuthUser } from '#shared/types/auth'
 import { prisma } from './prisma'
 
@@ -28,12 +29,6 @@ interface UserWithRoles {
   active: boolean
   createdAt: Date
   roles: UserRoleRecord[]
-}
-
-const scopeRank: Record<DataScope, number> = {
-  SELF: 0,
-  DEPT: 1,
-  ALL: 2
 }
 
 function getJwtSecret() {
@@ -99,10 +94,7 @@ export function toAuthUser(user: UserWithRoles): AuthUser {
     dataScope: readDataScope(userRole.role.dataScope)
   }))
   const permissions = [...new Set(activeRoles.flatMap(userRole => readPermissions(userRole.role.permissions)))]
-  const dataScope = roles.reduce<DataScope>(
-    (widest, role) => scopeRank[role.dataScope] > scopeRank[widest] ? role.dataScope : widest,
-    'SELF'
-  )
+  const dataScope = widestDataScope(roles.map(role => role.dataScope))
 
   return {
     id: user.id,
@@ -145,9 +137,9 @@ export async function requireUser(event: H3Event): Promise<AuthUser> {
   return toAuthUser(user)
 }
 
-export async function requirePermission(event: H3Event, code: string): Promise<AuthUser> {
+export async function requirePermission(event: H3Event, code: PermissionCode): Promise<AuthUser> {
   const user = await requireUser(event)
-  if (!user.permissions.includes('*') && !user.permissions.includes(code)) {
+  if (!hasPermission(user.permissions, code)) {
     throw createError({ statusCode: 403, statusMessage: '无权限' })
   }
   return user

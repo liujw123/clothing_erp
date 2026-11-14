@@ -1,10 +1,11 @@
 import { getRouterParam } from 'h3'
+import { PERMISSIONS } from '#shared/permissions'
 import { getCustomer } from '../../services/customer'
 import { requirePermission } from '../../utils/auth'
 import { defineApiHandler } from '../../utils/response'
 
 export default defineApiHandler(async (event) => {
-  await requirePermission(event, 'style:read')
+  await requirePermission(event, PERMISSIONS.STYLE_READ)
 
   const id = getRouterParam(event, 'id')
   if (!id) {

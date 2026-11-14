@@ -1,10 +1,11 @@
 import { getRouterParam } from 'h3'
 import { getFlowTemplate } from '../../services/flow-template'
+import { PERMISSIONS } from '#shared/permissions'
 import { requirePermission } from '../../utils/auth'
 import { defineApiHandler } from '../../utils/response'
 
 export default defineApiHandler(async (event) => {
-  await requirePermission(event, 'admin:template')
+  await requirePermission(event, PERMISSIONS.ADMIN_TEMPLATE)
 
   const code = getRouterParam(event, 'code')
   if (!code) {

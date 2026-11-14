@@ -1,3 +1,5 @@
+import type { PermissionCode } from '#shared/permissions'
+import { hasPermission } from '#shared/permissions'
 import type { ApiResponse } from '#shared/types/api'
 import type { AuthUser } from '#shared/types/auth'
 
@@ -37,9 +39,8 @@ export function useAuth() {
     }
   }
 
-  function can(code: string) {
-    const permissions = user.value?.permissions ?? []
-    return permissions.includes('*') || permissions.includes(code)
+  function can(code: PermissionCode) {
+    return hasPermission(user.value?.permissions ?? [], code)
   }
 
   return { user, fetchMe, login, logout, can }
