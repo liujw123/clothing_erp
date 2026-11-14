@@ -45,28 +45,21 @@ function roleLabel(code: string) {
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl">
-    <div class="flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <p class="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400">
-          Flow Templates
-        </p>
-        <h2 class="mt-2 text-2xl font-semibold tracking-tight">
-          流程模板
-        </h2>
-        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          4 套预设流程，展示阶段与任务配置，仅供查看。
-        </p>
-      </div>
-
-      <span class="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-        只读 · 管理员
-      </span>
-    </div>
+  <div class="w-full">
+    <PageHeader
+      title="流程模板"
+      description="4 套预设流程，展示阶段与任务配置，仅供查看。"
+    >
+      <template #actions>
+        <span class="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+          只读 · 管理员
+        </span>
+      </template>
+    </PageHeader>
 
     <div
       v-if="pending"
-      class="mt-8 rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
+      class="mt-4 rounded-lg border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
     >
       <UIcon
         name="i-lucide-loader-circle"
@@ -79,7 +72,7 @@ function roleLabel(code: string) {
 
     <UAlert
       v-else-if="error"
-      class="mt-8"
+      class="mt-4"
       color="error"
       variant="subtle"
       icon="i-lucide-circle-alert"
@@ -97,16 +90,16 @@ function roleLabel(code: string) {
 
     <div
       v-else-if="templates.length === 0"
-      class="mt-8 rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+      class="mt-4 rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
     >
       暂无流程模板
     </div>
 
     <div
       v-else
-      class="mt-8 grid gap-6 lg:grid-cols-[260px_1fr]"
+      class="mt-4 grid gap-4 lg:grid-cols-[240px_1fr]"
     >
-      <section class="min-w-0 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+      <section class="hidden min-w-0 rounded-lg border border-slate-200 bg-white p-2 lg:block dark:border-slate-800 dark:bg-slate-900">
         <p class="px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400">
           模板列表
         </p>
@@ -116,7 +109,7 @@ function roleLabel(code: string) {
             v-for="template in templates"
             :key="template.code"
             type="button"
-            class="w-full rounded-xl px-3 py-3 text-left transition"
+            class="w-full rounded-lg px-3 py-2.5 text-left transition"
             :class="selectedTemplate?.code === template.code
               ? 'bg-primary/10 text-primary'
               : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'"
@@ -135,11 +128,37 @@ function roleLabel(code: string) {
         </div>
       </section>
 
+      <div class="space-y-3 lg:hidden">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">
+          选择模板
+        </p>
+
+        <MobileListCard
+          v-for="template in templates"
+          :key="template.code"
+          :title="template.name"
+          :subtitle="template.code"
+          clickable
+          :active="selectedTemplate?.code === template.code"
+          @select="selectedCode = template.code"
+        >
+          <template #aside>
+            <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+              {{ template.config.stages.length }} 段
+            </span>
+          </template>
+
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            点击查看阶段与任务
+          </p>
+        </MobileListCard>
+      </div>
+
       <section
         v-if="selectedTemplate"
         class="min-w-0 space-y-4"
       >
-        <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+        <div class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p class="text-xs font-medium tracking-wider text-slate-400 uppercase dark:text-slate-500">
@@ -178,9 +197,9 @@ function roleLabel(code: string) {
         <div
           v-for="stage in selectedTemplate.config.stages"
           :key="stage.code"
-          class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+          class="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
         >
-          <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3 dark:border-slate-800">
+          <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
             <div class="flex items-center gap-3">
               <span class="flex size-7 items-center justify-center rounded-lg bg-slate-100 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 {{ stage.sort }}
@@ -198,7 +217,7 @@ function roleLabel(code: string) {
             <div
               v-for="task in stage.tasks"
               :key="task.type"
-              class="px-5 py-3"
+              class="px-4 py-2.5"
             >
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <p class="text-sm font-medium">

@@ -22,7 +22,7 @@ pnpm dev        # http://localhost:3000
 pnpm lint
 pnpm typecheck
 pnpm build
-pnpm db:seed    # 写入 15 个角色 + 3 个演示账号
+pnpm db:seed    # 只创建缺失角色；--reset-roles 恢复默认权限
 ```
 
 > 新增页面后如果 Tailwind 样式缺失，重启 dev server 或修改 `app/assets/css/main.css` 触发重新扫描。
@@ -50,7 +50,8 @@ FLUSH PRIVILEGES;
 cp .env.example .env
 pnpm db:generate   # 生成 Prisma Client
 pnpm db:migrate    # 执行迁移
-pnpm db:seed       # 写入角色与演示账号
+pnpm db:seed       # 只创建缺失角色，不覆盖已有角色权限
+pnpm db:seed --reset-roles  # 恢复 15 个角色的默认权限与数据范围
 pnpm db:studio     # Prisma Studio
 ```
 
@@ -82,5 +83,8 @@ public/   静态资源
 - [x] Customer 表与客户接口
 - [x] 客户管理页面（列表 / 搜索 / 新建 / 编辑）
 - [x] 权限底座（权限码 / 分组 / 通配符 / 数据范围工具）
-- [ ] 角色管理只读页
+- [x] Seed 默认不覆盖角色权限（`--reset-roles` 恢复默认）
+- [x] 角色管理（新增/编辑、权限/数据范围/启停、备注、独立变更记录与审计）
+- [x] 角色列表服务端分页、搜索与状态筛选
+- [x] 后台界面统一优化（深色侧边栏、紧凑顶栏、PageHeader、列表工具栏与分页）
 - [ ] P3 权限与布局

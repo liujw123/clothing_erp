@@ -1,6 +1,6 @@
 # 服装外贸 ERP API 文档
 
-> 版本：2026-11-13  
+> 版本：2026-11-14  
 > Base URL：`http://localhost:3000/api`  
 > 设计规范：[AGENTS.md 第 12 节](../../AGENTS.md)  
 > 响应格式：统一 `{ code, data, message }`
@@ -36,6 +36,8 @@ $me.data.name
 | 通用约定 | [conventions.md](./conventions.md) | 规范 |
 | 认证 / 会话 | [auth.md](./auth.md) | 已实现 |
 | 用户 | [users.md](./users.md) | 已实现当前用户、资料与密码修改 |
+| 角色 | [roles.md](./roles.md) | 已实现列表、搜索、状态筛选、分页、新增、编辑与审计 |
+| 审计记录 | [audit-logs.md](./audit-logs.md) | 已实现（只读） |
 | 健康检查 | [health.md](./health.md) | 已实现 |
 | 流程模板 | [flow-templates.md](./flow-templates.md) | 已实现（只读） |
 | 客户 | [customers.md](./customers.md) | 已实现 |
@@ -56,6 +58,10 @@ $me.data.name
 | GET | `/api/users/me` | 当前用户，返回 200 |
 | PATCH | `/api/users/me` | 修改当前用户资料 |
 | PATCH | `/api/users/me/password` | 修改当前用户密码 |
+| GET | `/api/roles` | 角色列表（管理员，支持分页/搜索/状态筛选） |
+| POST | `/api/roles` | 新增角色（管理员，返回 201） |
+| PATCH | `/api/roles/:code` | 修改角色权限/范围/启停（管理员） |
+| GET | `/api/audit-logs` | 审计记录列表（管理员，只读） |
 | GET | `/api/flow-templates` | 流程模板列表（管理员） |
 | GET | `/api/flow-templates/:code` | 流程模板详情（管理员） |
 | GET | `/api/customers` | 客户列表 |

@@ -21,25 +21,24 @@ interface CustomerList {
 }
 
 const { can } = useAuth()
+const { success: notifySuccess, error: notifyError } = useNotify()
 
 const customers = ref<Customer[]>([])
 const total = ref(0)
 const page = ref(1)
-const pageSize = 10
+const pageSize = ref(10)
 const keyword = ref('')
 const searchInput = ref('')
 const loading = ref(false)
 const errorMessage = ref('')
-const successMessage = ref('')
 
-const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 const hasPrev = computed(() => page.value > 1)
 const hasNext = computed(() => page.value < totalPages.value)
 
 const formOpen = ref(false)
 const editingId = ref<string | null>(null)
 const saving = ref(false)
-const formError = ref('')
 const form = reactive({
   code: '',
   name: '',
@@ -55,7 +54,7 @@ async function loadCustomers() {
     const response = await $fetch<ApiResponse<CustomerList>>('/api/customers', {
       query: {
         page: page.value,
-        pageSize,
+        pageSize: pageSize.value,
         keyword: keyword.value || undefined
       }
     })
@@ -71,14 +70,12 @@ async function loadCustomers() {
 }
 
 function applySearch() {
-  successMessage.value = ''
   keyword.value = searchInput.value.trim()
   page.value = 1
   loadCustomers()
 }
 
 function resetSearch() {
-  successMessage.value = ''
   searchInput.value = ''
   keyword.value = ''
   page.value = 1
@@ -93,13 +90,17 @@ function changePage(nextPage: number) {
   loadCustomers()
 }
 
+function changePageSize(nextPageSize: number) {
+  pageSize.value = nextPageSize
+  page.value = 1
+  loadCustomers()
+}
+
 function openCreate() {
   editingId.value = null
   form.code = ''
   form.name = ''
   form.country = ''
-  formError.value = ''
-  successMessage.value = ''
   formOpen.value = true
 }
 
@@ -108,21 +109,18 @@ function openEdit(customer: Customer) {
   form.code = customer.code
   form.name = customer.name
   form.country = customer.country ?? ''
-  formError.value = ''
-  successMessage.value = ''
   formOpen.value = true
 }
 
 async function saveCustomer() {
-  formError.value = ''
   const code = form.code.trim()
   const name = form.name.trim()
   if (!code) {
-    formError.value = '请输入客户编码'
+    notifyError('请输入客户编码')
     return
   }
   if (!name) {
-    formError.value = '请输入客户名称'
+    notifyError('请输入客户名称')
     return
   }
 
@@ -140,10 +138,10 @@ async function saveCustomer() {
       await $fetch('/api/customers', { method: 'POST', body })
     }
     formOpen.value = false
-    successMessage.value = isEdit ? '客户已更新' : '客户已创建'
+    notifySuccess(isEdit ? '客户已更新' : '客户已创建', `客户「${name}」已保存`)
     await loadCustomers()
   } catch (error) {
-    formError.value = getApiErrorMessage(error, '保存失败，请稍后重试')
+    notifyError(getApiErrorMessage(error, '保存失败，请稍后重试'))
   } finally {
     saving.value = false
   }
@@ -159,42 +157,25 @@ onMounted(loadCustomers)
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl">
-    <div class="flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <p class="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400">
-          Customer
-        </p>
-        <h2 class="mt-2 text-2xl font-semibold tracking-tight">
-          客户管理
-        </h2>
-        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          维护客户档案，共 {{ total }} 个客户。
-        </p>
-      </div>
+  <div class="w-full">
+    <PageHeader
+      title="客户管理"
+      :description="`维护客户档案，共 ${total} 个客户。`"
+    >
+      <template #actions>
+        <UButton
+          v-if="can(PERMISSIONS.STYLE_CREATE)"
+          icon="i-lucide-plus"
+          label="新建客户"
+          @click="openCreate"
+        />
+      </template>
+    </PageHeader>
 
-      <UButton
-        v-if="can(PERMISSIONS.STYLE_CREATE)"
-        icon="i-lucide-plus"
-        label="新建客户"
-        @click="openCreate"
-      />
-    </div>
-
-    <UAlert
-      v-if="successMessage"
-      class="mt-4"
-      color="success"
-      variant="subtle"
-      icon="i-lucide-circle-check"
-      :title="successMessage"
-    />
-
-    <div class="mt-6 flex flex-wrap items-center gap-3">
+    <div class="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
       <UInput
         v-model="searchInput"
         icon="i-lucide-search"
-        size="lg"
         placeholder="搜索客户编码、名称、国家"
         class="w-full sm:w-72"
         @keyup.enter="applySearch"
@@ -210,11 +191,21 @@ onMounted(loadCustomers)
         label="重置"
         @click="resetSearch"
       />
+      <div class="ml-auto">
+        <UButton
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-refresh-cw"
+          label="刷新"
+          :loading="loading"
+          @click="loadCustomers"
+        />
+      </div>
     </div>
 
     <UAlert
       v-if="errorMessage"
-      class="mt-6"
+      class="mt-3"
       color="error"
       variant="subtle"
       icon="i-lucide-circle-alert"
@@ -230,92 +221,90 @@ onMounted(loadCustomers)
       </template>
     </UAlert>
 
-    <div class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+    <div class="mt-3 hidden overflow-hidden rounded-lg border border-slate-200 bg-white lg:block dark:border-slate-800 dark:bg-slate-900">
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
-          <thead class="bg-slate-50 dark:bg-slate-800/50">
+        <table class="w-full min-w-[760px] text-sm">
+          <thead class="border-b border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-800/50">
             <tr>
-              <th class="px-5 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">
+              <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                 客户编码
               </th>
-              <th class="px-5 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">
+              <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                 客户名称
               </th>
-              <th class="px-5 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">
+              <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                 国家/地区
               </th>
-              <th class="px-5 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">
+              <th class="px-4 py-2.5 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                 创建时间
               </th>
-              <th class="px-5 py-3 text-right text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">
+              <th class="px-4 py-2.5 text-right text-xs font-medium text-slate-500 dark:text-slate-400">
                 操作
               </th>
             </tr>
           </thead>
 
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            <template v-if="loading">
-              <tr>
-                <td
-                  colspan="5"
-                  class="px-5 py-12 text-center text-sm text-slate-500 dark:text-slate-400"
-                >
-                  <UIcon
-                    name="i-lucide-loader-circle"
-                    class="mx-auto size-5 animate-spin text-primary"
-                  />
-                  <p class="mt-2">
-                    正在加载客户…
-                  </p>
-                </td>
-              </tr>
-            </template>
+            <tr v-if="loading">
+              <td
+                colspan="5"
+                class="px-4 py-12 text-center text-sm text-slate-500 dark:text-slate-400"
+              >
+                <UIcon
+                  name="i-lucide-loader-circle"
+                  class="mx-auto size-5 animate-spin text-primary"
+                />
+                <p class="mt-2">
+                  正在加载客户…
+                </p>
+              </td>
+            </tr>
 
-            <template v-else-if="customers.length === 0">
-              <tr>
-                <td
-                  colspan="5"
-                  class="px-5 py-12 text-center text-sm text-slate-500 dark:text-slate-400"
-                >
-                  {{ keyword ? '没有找到匹配的客户' : '暂无客户，先新建一个吧' }}
-                </td>
-              </tr>
-            </template>
+            <tr v-else-if="customers.length === 0">
+              <td
+                colspan="5"
+                class="px-4 py-12 text-center text-sm text-slate-500 dark:text-slate-400"
+              >
+                {{ keyword ? '没有找到匹配的客户' : '暂无客户，先新建一个吧' }}
+              </td>
+            </tr>
 
             <template v-else>
               <tr
                 v-for="customer in customers"
                 :key="customer.id"
-                class="transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                class="transition hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
               >
-                <td class="whitespace-nowrap px-5 py-4 font-mono text-xs text-slate-600 dark:text-slate-300">
+                <td class="whitespace-nowrap px-4 py-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                   {{ customer.code }}
                 </td>
-                <td class="px-5 py-4 font-medium">
+                <td class="whitespace-nowrap px-4 py-3 text-[13px] font-medium text-slate-900 dark:text-white">
                   {{ customer.name }}
                 </td>
-                <td class="px-5 py-4 text-slate-500 dark:text-slate-400">
-                  {{ customer.country ?? '-' }}
+                <td class="whitespace-nowrap px-4 py-3 text-[13px] text-slate-500 dark:text-slate-400">
+                  {{ customer.country ?? '—' }}
                 </td>
-                <td class="whitespace-nowrap px-5 py-4 text-slate-500 dark:text-slate-400">
+                <td class="whitespace-nowrap px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
                   {{ formatDate(customer.createdAt) }}
                 </td>
-                <td class="px-5 py-4 text-right">
-                  <UButton
-                    v-if="can(PERMISSIONS.STYLE_UPDATE)"
-                    color="neutral"
-                    variant="ghost"
-                    size="xs"
-                    icon="i-lucide-pencil"
-                    label="编辑"
-                    @click="openEdit(customer)"
-                  />
-                  <span
-                    v-else
-                    class="text-xs text-slate-400 dark:text-slate-500"
-                  >
-                    只读
-                  </span>
+                <td class="px-4 py-3">
+                  <div class="flex items-center justify-end">
+                    <UButton
+                      v-if="can(PERMISSIONS.STYLE_UPDATE)"
+                      color="neutral"
+                      variant="ghost"
+                      size="xs"
+                      icon="i-lucide-pencil"
+                      label="编辑"
+                      @click="openEdit(customer)"
+                    />
+                    <span
+                      v-else
+                      class="text-xs text-slate-400 dark:text-slate-500"
+                    >
+                      只读
+                    </span>
+                  </div>
                 </td>
               </tr>
             </template>
@@ -323,31 +312,98 @@ onMounted(loadCustomers)
         </table>
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
-        <span>共 {{ total }} 条 · 第 {{ page }} / {{ totalPages }} 页</span>
-        <div class="flex items-center gap-2">
-          <UButton
-            color="neutral"
-            variant="outline"
-            size="xs"
-            icon="i-lucide-chevron-left"
-            label="上一页"
-            :disabled="!hasPrev"
-            @click="changePage(page - 1)"
-          />
-          <UButton
-            color="neutral"
-            variant="outline"
-            size="xs"
-            trailing-icon="i-lucide-chevron-right"
-            label="下一页"
-            :disabled="!hasNext"
-            @click="changePage(page + 1)"
-          />
-        </div>
-      </div>
+      <ListPagination
+        :total="total"
+        :page="page"
+        :total-pages="totalPages"
+        :page-size="pageSize"
+        :has-prev="hasPrev"
+        :has-next="hasNext"
+        class="border-t border-slate-200 px-4 py-2.5 dark:border-slate-800"
+        @change-page="changePage"
+        @change-page-size="changePageSize"
+      />
     </div>
 
+    <div class="mt-3 space-y-3 lg:hidden">
+      <div
+        v-if="loading"
+        class="rounded-lg border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
+      >
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="mx-auto size-5 animate-spin text-primary"
+        />
+        <p class="mt-2">
+          正在加载客户…
+        </p>
+      </div>
+
+      <div
+        v-else-if="customers.length === 0"
+        class="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+      >
+        {{ keyword ? '没有找到匹配的客户' : '暂无客户，先新建一个吧' }}
+      </div>
+
+      <template v-else>
+        <MobileListCard
+          v-for="customer in customers"
+          :key="customer.id"
+          :title="customer.name"
+          :subtitle="customer.code"
+        >
+          <template #aside>
+            <UButton
+              v-if="can(PERMISSIONS.STYLE_UPDATE)"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              icon="i-lucide-pencil"
+              label="编辑"
+              @click="openEdit(customer)"
+            />
+            <span
+              v-else
+              class="shrink-0 text-xs text-slate-400 dark:text-slate-500"
+            >
+              只读
+            </span>
+          </template>
+
+          <dl class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <dt class="text-slate-500 dark:text-slate-400">
+                国家/地区
+              </dt>
+              <dd class="mt-0.5 text-slate-700 dark:text-slate-200">
+                {{ customer.country ?? '—' }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-slate-500 dark:text-slate-400">
+                创建时间
+              </dt>
+              <dd class="mt-0.5 text-slate-700 dark:text-slate-200">
+                {{ formatDate(customer.createdAt) }}
+              </dd>
+            </div>
+          </dl>
+        </MobileListCard>
+      </template>
+
+      <ListPagination
+        :total="total"
+        :page="page"
+        :total-pages="totalPages"
+        :page-size="pageSize"
+        :has-prev="hasPrev"
+        :has-next="hasNext"
+        class="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900"
+        @change-page="changePage"
+        @change-page-size="changePageSize"
+      />
+    </div>
     <UModal
       v-model:open="formOpen"
       :title="modalTitle"
@@ -398,14 +454,6 @@ onMounted(loadCustomers)
               placeholder="如 美国 / 日本"
             />
           </UFormField>
-
-          <UAlert
-            v-if="formError"
-            color="error"
-            variant="subtle"
-            icon="i-lucide-circle-alert"
-            :title="formError"
-          />
 
           <div class="flex justify-end gap-3 pt-2">
             <UButton

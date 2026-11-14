@@ -1,9 +1,19 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-/* 显式扫描 app 目录；新增页面后如样式缺失，修改此文件或重启 dev 触发重新扫描（维护提示） */
+/* 显式扫描 app 目录；新增页面后如样式缺失，修改此文件或重启 dev 触发重新扫描（维护提示 v2） */
 @source "../../";
 
 @theme static {
   --font-sans: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+/* 原生 select 的下拉箭头紧贴边框，统一改为自定义箭头并留出右侧安全区 */
+@utility select-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 0.625rem center;
+  background-repeat: no-repeat;
+  background-size: 0.875rem;
+  padding-right: 2rem;
 }

@@ -1,8 +1,8 @@
 import type { H3Event } from 'h3'
 import { createError, deleteCookie, getCookie, setCookie } from 'h3'
 import { SignJWT, jwtVerify } from 'jose'
-import type { DataScope, PermissionCode } from '#shared/permissions'
-import { hasPermission, widestDataScope } from '#shared/permissions'
+import type { PermissionCode } from '#shared/permissions'
+import { hasPermission, toDataScope, widestDataScope } from '#shared/permissions'
 import type { AuthUser } from '#shared/types/auth'
 import { prisma } from './prisma'
 
@@ -52,10 +52,6 @@ function readPermissions(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string')
 }
 
-function readDataScope(value: string): DataScope {
-  return value === 'ALL' || value === 'DEPT' ? value : 'SELF'
-}
-
 export function signToken(userId: string) {
   return new SignJWT({ sub: userId })
     .setProtectedHeader({ alg: 'HS256' })
@@ -91,7 +87,7 @@ export function toAuthUser(user: UserWithRoles): AuthUser {
   const roles = activeRoles.map(userRole => ({
     code: userRole.role.code,
     name: userRole.role.name,
-    dataScope: readDataScope(userRole.role.dataScope)
+    dataScope: toDataScope(userRole.role.dataScope)
   }))
   const permissions = [...new Set(activeRoles.flatMap(userRole => readPermissions(userRole.role.permissions)))]
   const dataScope = widestDataScope(roles.map(role => role.dataScope))

@@ -108,6 +108,11 @@ export function isScopeAtLeast(scope: DataScope, required: DataScope) {
   return DATA_SCOPE_RANK[scope] >= DATA_SCOPE_RANK[required]
 }
 
+/** 把数据库里的字符串规范化为 DataScope，非法值按 SELF 处理。 */
+export function toDataScope(value: string): DataScope {
+  return value === 'ALL' || value === 'DEPT' ? value : 'SELF'
+}
+
 export interface RoleDefinition {
   code: string
   name: string

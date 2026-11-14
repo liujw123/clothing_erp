@@ -6,7 +6,7 @@ useHead({
 </script>
 
 <template>
-  <UApp>
+  <UApp :toaster="{ position: 'bottom-left', class: 'sm:w-72' }">
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

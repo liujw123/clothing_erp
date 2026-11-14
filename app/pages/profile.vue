@@ -5,14 +5,11 @@ import type { AuthUser } from '#shared/types/auth'
 useHead({ title: '个人中心' })
 
 const { user, fetchMe } = useAuth()
+const { success: notifySuccess, error: notifyError } = useNotify()
 
 const activeTab = ref<'profile' | 'password'>('profile')
 const savingProfile = ref(false)
 const changingPassword = ref(false)
-const profileError = ref('')
-const profileSuccess = ref('')
-const passwordError = ref('')
-const passwordSuccess = ref('')
 
 const profileForm = reactive({
   name: '',
@@ -76,15 +73,12 @@ function formatDate(value?: string) {
 }
 
 async function saveProfile() {
-  profileError.value = ''
-  profileSuccess.value = ''
-
   if (!profileForm.name.trim()) {
-    profileError.value = '请输入用户昵称'
+    notifyError('请输入用户昵称')
     return
   }
   if (!profileForm.email.trim()) {
-    profileError.value = '请输入邮箱'
+    notifyError('请输入邮箱')
     return
   }
 
@@ -100,28 +94,25 @@ async function saveProfile() {
       }
     })
     await fetchMe()
-    profileSuccess.value = '基本资料已保存'
+    notifySuccess('基本资料已保存')
   } catch (error) {
-    profileError.value = getApiErrorMessage(error, '保存失败，请稍后重试')
+    notifyError(getApiErrorMessage(error, '保存失败，请稍后重试'))
   } finally {
     savingProfile.value = false
   }
 }
 
 async function changePassword() {
-  passwordError.value = ''
-  passwordSuccess.value = ''
-
   if (!passwordForm.oldPassword) {
-    passwordError.value = '请输入旧密码'
+    notifyError('请输入旧密码')
     return
   }
   if (passwordForm.newPassword.length < 6) {
-    passwordError.value = '新密码至少 6 位'
+    notifyError('新密码至少 6 位')
     return
   }
   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    passwordError.value = '两次输入的新密码不一致'
+    notifyError('两次输入的新密码不一致')
     return
   }
 
@@ -134,12 +125,12 @@ async function changePassword() {
         newPassword: passwordForm.newPassword
       }
     })
-    passwordSuccess.value = '密码修改成功'
+    notifySuccess('密码修改成功')
     passwordForm.oldPassword = ''
     passwordForm.newPassword = ''
     passwordForm.confirmPassword = ''
   } catch (error) {
-    passwordError.value = getApiErrorMessage(error, '修改密码失败，请稍后重试')
+    notifyError(getApiErrorMessage(error, '修改密码失败，请稍后重试'))
   } finally {
     changingPassword.value = false
   }
@@ -151,9 +142,14 @@ function closePage() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl">
-    <div class="grid gap-6 lg:grid-cols-[320px_1fr]">
-      <section class="min-w-0 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+  <div class="w-full">
+    <PageHeader
+      title="个人中心"
+      description="管理个人资料与登录密码。"
+    />
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-[280px_1fr]">
+      <section class="min-w-0 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
         <h2 class="text-base font-semibold tracking-tight">
           个人信息
         </h2>
@@ -251,7 +247,7 @@ function closePage() {
         </dl>
       </section>
 
-      <section class="min-w-0 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+      <section class="min-w-0 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
         <h2 class="text-base font-semibold tracking-tight">
           基本资料
         </h2>
@@ -350,21 +346,6 @@ function closePage() {
             </div>
           </UFormField>
 
-          <UAlert
-            v-if="profileError"
-            color="error"
-            variant="subtle"
-            icon="i-lucide-circle-alert"
-            :title="profileError"
-          />
-          <UAlert
-            v-if="profileSuccess"
-            color="success"
-            variant="subtle"
-            icon="i-lucide-circle-check"
-            :title="profileSuccess"
-          />
-
           <div class="flex gap-3 pt-2">
             <UButton
               type="submit"
@@ -440,21 +421,6 @@ function closePage() {
               placeholder="请再次输入新密码"
             />
           </UFormField>
-
-          <UAlert
-            v-if="passwordError"
-            color="error"
-            variant="subtle"
-            icon="i-lucide-circle-alert"
-            :title="passwordError"
-          />
-          <UAlert
-            v-if="passwordSuccess"
-            color="success"
-            variant="subtle"
-            icon="i-lucide-circle-check"
-            :title="passwordSuccess"
-          />
 
           <div class="flex gap-3 pt-2">
             <UButton

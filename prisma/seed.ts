@@ -39,25 +39,43 @@ function toJsonValue(value: unknown): Prisma.InputJsonValue {
 }
 
 async function main() {
+  const resetRoles = process.argv.includes('--reset-roles') || process.env.npm_config_reset_roles === 'true'
   const passwordHash = await bcrypt.hash('123456', 10)
+  let createdRoles = 0
+  let resetRoleCount = 0
 
   for (const role of ROLE_DEFINITIONS) {
-    await prisma.role.upsert({
+    const existing = await prisma.role.findUnique({
       where: { code: role.code },
-      update: {
-        name: role.name,
-        permissions: role.permissions,
-        dataScope: role.dataScope,
-        active: true
-      },
-      create: {
-        code: role.code,
-        name: role.name,
-        permissions: role.permissions,
-        dataScope: role.dataScope,
-        active: true
-      }
+      select: { code: true }
     })
+
+    if (!existing) {
+      await prisma.role.create({
+        data: {
+          code: role.code,
+          name: role.name,
+          permissions: role.permissions,
+          dataScope: role.dataScope,
+          active: true
+        }
+      })
+      createdRoles++
+      continue
+    }
+
+    if (resetRoles) {
+      await prisma.role.update({
+        where: { code: role.code },
+        data: {
+          name: role.name,
+          permissions: role.permissions,
+          dataScope: role.dataScope,
+          active: true
+        }
+      })
+      resetRoleCount++
+    }
   }
 
   for (const [code, template] of Object.entries(FLOW_TEMPLATES)) {
@@ -129,7 +147,7 @@ async function main() {
     })
   }
 
-  console.log(`seed 完成：${ROLE_DEFINITIONS.length} 个角色，${demoUsers.length} 个演示账号，${Object.keys(FLOW_TEMPLATES).length} 个流程模板，${demoCustomers.length} 个客户`)
+  console.log(`seed 完成（角色模式：${resetRoles ? '重置默认' : '仅创建缺失'}）：新增角色 ${createdRoles} 个，重置角色 ${resetRoleCount} 个，${demoUsers.length} 个演示账号，${Object.keys(FLOW_TEMPLATES).length} 个流程模板，${demoCustomers.length} 个客户`)
 }
 
 main()

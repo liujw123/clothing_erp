@@ -14,6 +14,7 @@ model Role {
   permissions Json // string[]，如 ["style:read", "task:submit"]
   dataScope   String   @default("SELF") // SELF | DEPT | ALL
   active      Boolean  @default(true) // 是否启用
+  remark      String?  @db.VarChar(500) // 角色备注
   createdAt   DateTime @default(now()) // 创建时间
   updatedAt   DateTime @updatedAt // 更新时间
 
@@ -46,6 +47,7 @@ model User {
   updatedAt DateTime @updatedAt // 更新时间
 
   roles UserRole[] // 该用户拥有的角色
+  auditLogs AuditLog[] // 该用户产生的审计记录
 
   @@index([deptId])
 }
@@ -67,4 +69,23 @@ model Customer {
   country   String? // 国家/地区
   createdAt DateTime @default(now()) // 创建时间
   updatedAt DateTime @updatedAt // 更新时间
+}
+
+/// 管理操作审计。只追加，不提供修改/删除接口。
+model AuditLog {
+  id         String   @id @default(cuid()) // 主键，cuid 字符串
+  actorId    String // 操作人用户 ID
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action     String // UPDATE_ROLE 等
+  entityType String // ROLE / USER / POSITION
+  entityId   String // 例如 DESIGNER
+  before     Json? // 变更前快照
+  after      Json? // 变更后快照
+  comment    String?  @db.VarChar(500) // 备注
+  ip         String?  @db.VarChar(64) // 请求 IP
+  userAgent  String?  @db.VarChar(512) // 浏览器 UA
+  createdAt  DateTime @default(now()) // 创建时间
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
 }

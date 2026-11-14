@@ -1,58 +1,20 @@
 <script setup lang="ts">
-import { PERMISSIONS } from '#shared/permissions'
-import type { PermissionCode } from '#shared/permissions'
-
-interface MenuItem {
-  label: string
-  to: string
-  icon: string
-  disabled?: boolean
-  permission?: PermissionCode
-}
-
-interface MenuGroup {
-  label?: string
-  items: MenuItem[]
-}
-
-const menuGroups: MenuGroup[] = [
-  {
-    items: [
-      { label: '工作台', to: '/', icon: 'i-lucide-layout-dashboard' }
-    ]
-  },
-  {
-    label: '业务',
-    items: [
-      { label: '客户管理', to: '/customers', icon: 'i-lucide-building-2', permission: PERMISSIONS.STYLE_READ },
-      { label: '款管理', to: '/styles', icon: 'i-lucide-shirt', disabled: true },
-      { label: '任务中心', to: '/tasks', icon: 'i-lucide-list-checks', disabled: true },
-      { label: '订单管理', to: '/orders', icon: 'i-lucide-shopping-cart', disabled: true }
-    ]
-  },
-  {
-    label: '系统',
-    items: [
-      { label: '用户管理', to: '/users', icon: 'i-lucide-users', disabled: true, permission: PERMISSIONS.ADMIN_USER },
-      { label: '流程模板', to: '/templates', icon: 'i-lucide-workflow', permission: PERMISSIONS.ADMIN_TEMPLATE }
-    ]
-  }
-]
+import { MENU_GROUPS, MENU_ITEMS, isMenuVisible } from '~/utils/menu'
 
 const route = useRoute()
 const sidebarOpen = ref(false)
 const userMenuOpen = ref(false)
-const { user, logout, can } = useAuth()
+const { user, logout } = useAuth()
 
-const allMenuItems = menuGroups.flatMap(group => group.items)
+const allMenuItems = MENU_ITEMS
 const pageTitles: Record<string, string> = {
   '/profile': '个人中心'
 }
 
-const visibleMenuGroups = computed(() => menuGroups
+const visibleMenuGroups = computed(() => MENU_GROUPS
   .map(group => ({
     ...group,
-    items: group.items.filter(item => !item.permission || can(item.permission))
+    items: group.items.filter(item => isMenuVisible(item, user.value?.permissions ?? []))
   }))
   .filter(group => group.items.length > 0)
 )
@@ -100,42 +62,42 @@ watch(() => route.fullPath, () => {
     />
 
     <aside
-      class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-slate-900 text-slate-100 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0"
+      class="fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-slate-900 text-slate-100 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
       <NuxtLink
         to="/"
-        class="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5"
+        class="flex h-14 shrink-0 items-center gap-2.5 border-b border-white/10 px-4"
       >
-        <span class="flex size-9 items-center justify-center rounded-xl bg-primary text-white">
+        <span class="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
           <UIcon
             name="i-lucide-shirt"
-            class="size-5"
+            class="size-4"
           />
         </span>
         <div class="min-w-0">
-          <p class="truncate text-sm font-semibold">
+          <p class="truncate text-sm font-semibold tracking-tight">
             Clothing ERP
           </p>
-          <p class="truncate text-[11px] text-slate-400">
+          <p class="truncate text-[10px] text-slate-400">
             服装外贸全流程
           </p>
         </div>
       </NuxtLink>
 
-      <nav class="flex-1 space-y-6 overflow-y-auto px-3 py-5">
+      <nav class="flex-1 space-y-5 overflow-y-auto px-2 py-4">
         <div
           v-for="group in visibleMenuGroups"
           :key="group.label ?? 'main'"
         >
           <p
             v-if="group.label"
-            class="px-3 pb-2 text-[11px] font-medium tracking-wider text-slate-500 uppercase"
+            class="px-3 pb-1.5 text-[10px] font-medium tracking-[0.16em] text-slate-500 uppercase"
           >
             {{ group.label }}
           </p>
 
-          <div class="space-y-1">
+          <div class="space-y-0.5">
             <template
               v-for="item in group.items"
               :key="item.to"
@@ -143,21 +105,22 @@ watch(() => route.fullPath, () => {
               <NuxtLink
                 v-if="!item.disabled"
                 :to="item.to"
-                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition"
+                class="relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition"
                 :class="isActivePath(item.to)
-                  ? 'bg-primary text-white shadow-sm'
+                  ? 'bg-primary/15 font-medium text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
                   : 'text-slate-300 hover:bg-white/5 hover:text-white'"
               >
                 <UIcon
                   :name="item.icon"
                   class="size-4 shrink-0"
+                  :class="isActivePath(item.to) ? 'text-primary' : 'text-slate-400'"
                 />
                 <span class="flex-1">{{ item.label }}</span>
               </NuxtLink>
 
               <div
                 v-else
-                class="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-500"
+                class="flex cursor-not-allowed items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] text-slate-500"
                 aria-disabled="true"
                 title="待开发"
               >
@@ -166,7 +129,7 @@ watch(() => route.fullPath, () => {
                   class="size-4 shrink-0"
                 />
                 <span class="flex-1">{{ item.label }}</span>
-                <span class="rounded-full bg-white/5 px-1.5 py-0.5 text-[10px]">
+                <span class="rounded-full bg-white/5 px-1.5 py-0.5 text-[9px]">
                   待开发
                 </span>
               </div>
@@ -175,14 +138,14 @@ watch(() => route.fullPath, () => {
         </div>
       </nav>
 
-      <div class="shrink-0 border-t border-white/10 px-5 py-4 text-[11px] text-slate-500">
+      <div class="shrink-0 border-t border-white/10 px-4 py-3 text-[10px] text-slate-500">
         Clothing ERP · v0.1
       </div>
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:px-6">
-        <div class="flex min-w-0 items-center gap-3">
+      <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:px-6">
+        <div class="flex min-w-0 items-center gap-2">
           <UButton
             color="neutral"
             variant="ghost"
@@ -192,24 +155,24 @@ watch(() => route.fullPath, () => {
             @click="sidebarOpen = true"
           />
 
-          <div class="min-w-0">
-            <p class="truncate text-[11px] text-slate-400 dark:text-slate-500">
-              <NuxtLink
-                to="/"
-                class="transition hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                首页
-              </NuxtLink>
-              <span class="mx-1 text-slate-300 dark:text-slate-600">/</span>
+          <nav class="flex min-w-0 items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+            <NuxtLink
+              to="/"
+              class="shrink-0 transition hover:text-slate-700 dark:hover:text-slate-200"
+            >
+              首页
+            </NuxtLink>
+            <UIcon
+              name="i-lucide-chevron-right"
+              class="size-3 shrink-0 text-slate-300 dark:text-slate-600"
+            />
+            <span class="truncate font-medium text-slate-700 dark:text-slate-200">
               {{ currentTitle }}
-            </p>
-            <h1 class="truncate text-base font-semibold tracking-tight">
-              {{ currentTitle }}
-            </h1>
-          </div>
+            </span>
+          </nav>
         </div>
 
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-0.5">
           <UButton
             color="neutral"
             variant="ghost"
@@ -222,7 +185,7 @@ watch(() => route.fullPath, () => {
 
           <ThemeSwitcher />
 
-          <span class="mx-1 hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" />
+          <span class="mx-1 hidden h-5 w-px bg-slate-200 sm:block dark:bg-slate-700" />
 
           <UPopover
             v-model:open="userMenuOpen"
@@ -232,7 +195,7 @@ watch(() => route.fullPath, () => {
               type="button"
               class="flex items-center gap-2 rounded-full p-1 pr-2 transition hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              <span class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+              <span class="flex size-7 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary">
                 {{ userInitial }}
               </span>
               <span class="hidden text-left sm:block">
@@ -287,7 +250,7 @@ watch(() => route.fullPath, () => {
         </div>
       </header>
 
-      <main class="flex-1 p-4 sm:p-6 lg:p-8">
+      <main class="flex-1 px-4 py-5 sm:px-6 lg:px-8">
         <slot />
       </main>
     </div>
